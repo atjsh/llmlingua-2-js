@@ -1,6 +1,12 @@
 {
   "name": "@atjsh/llmlingua-2",
+  "version": "1.0.1",
   "packageManager": "yarn@4.9.1",
+  "description": "JavaScript/TypeScript Implementation of LLMLingua-2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atjsh/llmlingua-2-js.git"
+  },
   "type": "module",
   "scripts": {
     "build": "tsc"
@@ -22,6 +28,5 @@
     "@huggingface/transformers": "*",
     "@tensorflow/tfjs": "*",
     "tiktoken": "*"
-  },
-  "version": "1.0.1"
+  }
 }
