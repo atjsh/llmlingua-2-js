@@ -29,5 +29,31 @@
     "@huggingface/transformers": "*",
     "@tensorflow/tfjs": "*",
     "tiktoken": "*"
-  }
+  },
+  "keywords": [
+    "llmlingua",
+    "llmlingua2",
+    "llmlingua-2",
+    "llm",
+    "language model",
+    "transformer",
+    "javascript",
+    "typescript",
+    "summarization",
+    "translation",
+    "text generation",
+    "text classification",
+    "question answering",
+    "named entity recognition",
+    "sentiment analysis",
+    "huggingface",
+    "hf",
+    "transformers",
+    "tensorflow",
+    "tfjs",
+    "webgpu",
+    "webassembly",
+    "onnx",
+    "onnxruntime"
+  ]
 }
