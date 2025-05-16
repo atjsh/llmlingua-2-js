@@ -1,4 +1,4 @@
-# JavaScript Implementation of LLMLingua-2
+# JavaScript/TypeScript Implementation of LLMLingua-2
 
 ![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)
 
