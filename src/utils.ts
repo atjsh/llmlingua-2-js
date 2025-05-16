@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // Equivalent to Python's string.punctuation
 const PUNCTUATION: string = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
