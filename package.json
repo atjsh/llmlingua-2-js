@@ -1,0 +1,20 @@
+{
+  "name": "llmlingua-2-js",
+  "packageManager": "yarn@4.9.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "^3.5.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@types/node": "^22.15.18",
+    "tiktoken": "^1.0.21",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@huggingface/transformers": "*",
+    "@tensorflow/tfjs": "*",
+    "tiktoken": "*"
+  }
+}
