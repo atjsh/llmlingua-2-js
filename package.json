@@ -16,5 +16,6 @@
     "@huggingface/transformers": "*",
     "@tensorflow/tfjs": "*",
     "tiktoken": "*"
-  }
+  },
+  "version": "1.0.0"
 }
