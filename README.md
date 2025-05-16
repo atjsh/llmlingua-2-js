@@ -1,9 +1,11 @@
+[[한국어]](README.ko-kr.md)
+
 # JavaScript/TypeScript Implementation of LLMLingua-2
 
 [![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
+Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser or Node.js.
 
 ## What is LLMLingua-2?
 
