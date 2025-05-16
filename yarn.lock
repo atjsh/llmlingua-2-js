@@ -5,6 +5,22 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@atjsh/llmlingua-2@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@atjsh/llmlingua-2@workspace:."
+  dependencies:
+    "@huggingface/transformers": "npm:^3.5.1"
+    "@tensorflow/tfjs": "npm:^4.22.0"
+    "@types/node": "npm:^22.15.18"
+    tiktoken: "npm:^1.0.21"
+    typescript: "npm:^5.8.3"
+  peerDependencies:
+    "@huggingface/transformers": "*"
+    "@tensorflow/tfjs": "*"
+    tiktoken: "*"
+  languageName: unknown
+  linkType: soft
+
 "@emnapi/runtime@npm:^1.4.0":
   version: 1.4.3
   resolution: "@emnapi/runtime@npm:1.4.3"
@@ -851,22 +867,6 @@ __metadata:
   checksum: 10c0/7dbf35cd0411d1d648dceb6d59ce5857ec939e52e4afc37601aa3da611f0987d5cee5b38d58329ceddf3ed48bd7215229c8d52059ab01f2444a338bf24ed0f37
   languageName: node
   linkType: hard
-
-"llmlingua-2-js@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "llmlingua-2-js@workspace:."
-  dependencies:
-    "@huggingface/transformers": "npm:^3.5.1"
-    "@tensorflow/tfjs": "npm:^4.22.0"
-    "@types/node": "npm:^22.15.18"
-    tiktoken: "npm:^1.0.21"
-    typescript: "npm:^5.8.3"
-  peerDependencies:
-    "@huggingface/transformers": "*"
-    "@tensorflow/tfjs": "*"
-    tiktoken: "*"
-  languageName: unknown
-  linkType: soft
 
 "long@npm:4.0.0":
   version: 4.0.0
