@@ -5,6 +5,12 @@
   "scripts": {
     "build": "tsc"
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@huggingface/transformers": "^3.5.1",
     "@tensorflow/tfjs": "^4.22.0",
