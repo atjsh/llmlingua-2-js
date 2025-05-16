@@ -1,5 +1,7 @@
 # JavaScript Implementation of LLMLingua-2
 
+![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)
+
 Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
 
 ## Status
