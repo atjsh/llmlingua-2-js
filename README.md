@@ -1,6 +1,6 @@
-[[한국어]](README.ko-kr.md)
-
 # JavaScript/TypeScript Implementation of LLMLingua-2
+
+[[한국어]](README.ko-kr.md)
 
 [![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

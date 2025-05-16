@@ -1,6 +1,6 @@
-[[English]](README.md)
-
 # LLMLingua-2의 JavaScript/TypeScript 구현체
+
+[[English]](README.md)
 
 [![NPM 버전](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![라이센스](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
