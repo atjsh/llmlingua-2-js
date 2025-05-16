@@ -15,9 +15,26 @@ LLMLingua-2, a small-size yet powerful prompt compression method trained via dat
 
 **This library is under active development and the API is subject to change.**
 
-## Installation
+# Installation
 
-### NPM
+## Prerequisites
+
+This implementation depends on the following libraries:
+
+- [**@huggingface/transformers**](https://github.com/huggingface/transformers.js)
+- [**@tensorflow/tfjs**](https://github.com/tensorflow/tfjs)
+
+Especially, the `@huggingface/transformers` library utilizes various computational optimizations to achieve high performance. Please consult if the running environment supports the minimum requirements from these libraries.
+
+## Browser
+
+To use the library in the browser, you can include it via a CDN:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@atjsh/llmlingua-2@latest/dist/llmlingua-2.min.js"></script>
+```
+
+## NPM
 
 First, install the dependencies:
 
