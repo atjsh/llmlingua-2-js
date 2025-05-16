@@ -2,6 +2,10 @@
 
 Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
 
+## Status
+
+**This library is under active development and the API is subject to change.**
+
 ## License
 
 See [LICENSE](LICENSE) for details.
