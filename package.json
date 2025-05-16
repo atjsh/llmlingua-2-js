@@ -1,5 +1,5 @@
 {
-  "name": "llmlingua-2-js",
+  "name": "@atjsh/llmlingua-2",
   "packageManager": "yarn@4.9.1",
   "type": "module",
   "scripts": {

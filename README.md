@@ -1,4 +1,4 @@
-# LLMLingua-2.js
+# JavaScript Implementation of LLMLingua-2
 
 Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
 
@@ -6,9 +6,27 @@ Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
 
 **This library is under active development and the API is subject to change.**
 
-## License
+## Installation
+
+### NPM
+
+First, install the dependencies:
+
+```sh
+npm install @huggingface/transformers @tensorflow/tfjs tiktoken
+```
+
+Then, install the library:
+
+```sh
+npm install @atjsh/llmlingua-2
+```
+
+# License
 
 See [LICENSE](LICENSE) for details.
+
+# Credits
 
 This software includes other software related under the following licenses:
 
