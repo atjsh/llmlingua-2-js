@@ -50,6 +50,22 @@ npm install @huggingface/transformers @tensorflow/tfjs tiktoken
 npm install @atjsh/llmlingua-2
 ```
 
+# 사용법
+
+```typescript
+import { PromptCompressorLLMLingua2 } from "@atjsh/llmlingua-2";
+
+const modelName = "YOUR_MODEL_NAME"; // e.g., "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
+
+const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8" });
+await compressor.init();
+
+const compressedText: string = await compressor.compress_prompt(
+  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
+  { rate: 0.8 }
+);
+```
+
 # 라이센스 (License)
 
 [LICENSE](LICENSE)
