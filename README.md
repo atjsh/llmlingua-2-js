@@ -1,6 +1,6 @@
 # LLMLingua-2.js
 
-Run LLMLingua-2 in your web browser.
+Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser.
 
 ## License
 
