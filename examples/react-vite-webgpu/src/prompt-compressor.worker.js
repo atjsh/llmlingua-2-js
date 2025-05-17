@@ -19,9 +19,10 @@ async function check() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 webGPUAvailable = true;
+
+                return;
             }
 
-            return;
         }
 
         webGPUAvailable = false;
