@@ -26,7 +26,26 @@ export default function Chat({ messages }) {
                 <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4">
                   <p className="min-h-6 text-gray-800 dark:text-gray-200 overflow-wrap-anywhere">
                     {msg.content.length > 0 ? (
-                      <span className="markdown">{msg.content}</span>
+                      <div>
+                        <div className="markdown">{msg.content}</div>
+                        <br />
+                        <hr />
+                        <br />
+                        <div>
+                          <p>
+                            before: {msg.inputLength.toLocaleString()}, after:{" "}
+                            {msg.compressedLength.toLocaleString()}
+                          </p>
+                          <p>
+                            🗑️{" "}
+                            {(
+                              100 -
+                              (msg.compressedLength / msg.inputLength) * 100
+                            ).toFixed(2)}
+                            % characters removed
+                          </p>
+                        </div>
+                      </div>
                     ) : (
                       <span className="h-6 flex items-center gap-1">
                         <span className="w-2.5 h-2.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-pulse"></span>

@@ -126,15 +126,15 @@ function App() {
           {
             // Generation update: update the output text.
             // Parse messages
-            const { output, tps, numTokens } = e.data;
-            setTps(tps);
-            setNumTokens(numTokens);
+            const { output } = e.data;
             setMessages((prev) => {
               const cloned = [...prev];
               const last = cloned.at(-1);
               cloned[cloned.length - 1] = {
                 ...last,
-                content: last.content + output,
+                content: last.content + output.result,
+                inputLength: output.inputLength,
+                compressedLength: output.compressedLength,
               };
               return cloned;
             });

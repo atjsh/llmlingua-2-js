@@ -47,20 +47,30 @@ async function generate(messages) {
     const input = messages[messages.length - 1]
     const compressionRate = (input.compressionRate / 100).toFixed(5)
     const inputText = input.content;
+    const inputLength = inputText.length;
 
     const result = await promptCompressor.compress_prompt(inputText, { rate: compressionRate })
+
+    const compressedLength = result.length;
 
     console.log({ result });
     self.postMessage({
         status: "update",
-        output: result,
+        output: {
+            result: result,
+            inputLength: inputLength,
+            compressedLength: compressedLength,
+        }
     })
-
 
     // Send the output back to the main thread
     self.postMessage({
         status: "complete",
-        output: result,
+        output: {
+            result: result,
+            inputLength: inputLength,
+            compressedLength: compressedLength,
+        }
     });
 }
 
