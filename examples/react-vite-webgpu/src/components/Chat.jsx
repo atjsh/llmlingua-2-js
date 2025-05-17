@@ -32,7 +32,7 @@ export default function Chat({ messages }) {
                         <hr />
                         <br />
                         <div>
-                          <p>
+                          <p className=" text-xs">
                             before: {msg.inputLength.toLocaleString()}, after:{" "}
                             {msg.compressedLength.toLocaleString()}
                           </p>
@@ -42,7 +42,7 @@ export default function Chat({ messages }) {
                               100 -
                               (msg.compressedLength / msg.inputLength) * 100
                             ).toFixed(2)}
-                            % characters removed
+                            % of characters removed
                           </p>
                         </div>
                       </div>
