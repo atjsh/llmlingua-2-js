@@ -46,14 +46,6 @@ npm install
 
 특히, `@huggingface/transformers` 라이브러리는 높은 성능을 달성하기 위해 다양한 계산 최적화를 활용한다. 실행 환경이 이러한 라이브러리의 최소 요구 사항을 지원하는지 확인하라.
 
-## Browser
-
-브라우저에서 라이브러리를 사용하려면 CDN을 통해 포함할 수 있다:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@atjsh/llmlingua-2@latest/dist/llmlingua-2.min.js"></script>
-```
-
 ## NPM
 
 먼저, 종속성을 설치해야 한다:

@@ -46,14 +46,6 @@ This implementation depends on the following libraries:
 
 Especially, the `@huggingface/transformers` library utilizes various computational optimizations to achieve high performance. Please consult if the running environment supports the minimum requirements from these libraries.
 
-## Browser
-
-To use the library in the browser, you can include it via a CDN:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@atjsh/llmlingua-2@latest/dist/llmlingua-2.min.js"></script>
-```
-
 ## NPM
 
 First, install the dependencies:
