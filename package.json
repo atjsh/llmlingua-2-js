@@ -22,13 +22,13 @@
     "@huggingface/transformers": "^3.5.1",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/node": "^22.15.18",
-    "tiktoken": "^1.0.21",
+    "js-tiktoken": "^1.0.20",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@huggingface/transformers": "*",
     "@tensorflow/tfjs": "*",
-    "tiktoken": "*"
+    "js-tiktoken": "*"
   },
   "keywords": [
     "llmlingua",

@@ -12,11 +12,13 @@ __metadata:
     "@huggingface/transformers": "npm:^3.5.1"
     "@tensorflow/tfjs": "npm:^4.22.0"
     "@types/node": "npm:^22.15.18"
+    js-tiktoken: "npm:^1.0.20"
     tiktoken: "npm:^1.0.21"
     typescript: "npm:^5.8.3"
   peerDependencies:
     "@huggingface/transformers": "*"
     "@tensorflow/tfjs": "*"
+    js-tiktoken: "*"
     tiktoken: "*"
   languageName: unknown
   linkType: soft
@@ -493,6 +495,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"base64-js@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "base64-js@npm:1.5.1"
+  checksum: 10c0/f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
+  languageName: node
+  linkType: hard
+
 "boolean@npm:^3.0.1":
   version: 3.2.0
   resolution: "boolean@npm:3.2.0"
@@ -858,6 +867,15 @@ __metadata:
   version: 3.0.0
   resolution: "is-fullwidth-code-point@npm:3.0.0"
   checksum: 10c0/bb11d825e049f38e04c06373a8d72782eee0205bda9d908cc550ccb3c59b99d750ff9537982e01733c1c94a58e35400661f57042158ff5e8f3e90cf936daf0fc
+  languageName: node
+  linkType: hard
+
+"js-tiktoken@npm:^1.0.20":
+  version: 1.0.20
+  resolution: "js-tiktoken@npm:1.0.20"
+  dependencies:
+    base64-js: "npm:^1.5.1"
+  checksum: 10c0/846c9257b25efa153695bb2a4a85f35e2e747fa76f03d04dcaffee5b64ce22ccd61db83af099492558375eabf18c8070369d0f88de07a9fcf4cb494bb9759dbd
   languageName: node
   linkType: hard
 

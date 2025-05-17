@@ -10,7 +10,8 @@ import {
   TokenClassifierOutput,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
-import { encoding_for_model, Tiktoken } from "tiktoken";
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
 
 import {
   get_pure_token,
@@ -54,6 +55,8 @@ export class PromptCompressorLLMLingua2 {
     for (let i = 0; i < this.llmlingua2Config.max_force_token; i++) {
       this.addedTokens.push(`[NEW${i}]`);
     }
+
+    this.oai_tokenizer = new Tiktoken(o200k_base);
   }
 
   public async init() {
@@ -86,8 +89,6 @@ export class PromptCompressorLLMLingua2 {
         dtype: this.modelOptions.dtype,
       }
     );
-
-    this.oai_tokenizer = encoding_for_model("gpt-3.5-turbo");
   }
 
   public async compress_prompt(
@@ -202,7 +203,7 @@ export class PromptCompressorLLMLingua2 {
   }
 
   private getTokenLength(text: string): number {
-    return this.oai_tokenizer.encode(text).length;
+    return this.tokenizer.tokenize(text).length;
   }
 
   private mergeTokenToWord(
