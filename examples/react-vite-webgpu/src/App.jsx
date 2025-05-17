@@ -270,6 +270,10 @@ function App() {
                 Click to Start
               </button>
             </div>
+            <div className="text-sm text-center text-gray-500 dark:text-gray-300">
+              when you click Start, <br />
+              <b>0.5GB ~ 1GB</b> of model files will be loaded.
+            </div>
           </div>
         </div>
       )}
