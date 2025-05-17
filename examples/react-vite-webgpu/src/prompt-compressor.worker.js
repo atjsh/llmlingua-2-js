@@ -6,7 +6,7 @@ env.allowRemoteModels = false;
 env.allowLocalModels = true
 
 
-const modelName = "/models/microsoft/llmlingua-2-xlm-roberta-large-meetingbank";
+const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
 const stopping_criteria = new InterruptableStoppingCriteria();
 
 
