@@ -31,7 +31,7 @@ async function load(loadConfig) {
         data: "Loading model...",
     });
 
-    const dtype = loadConfig.dtype || "int8";
+    const dtype = loadConfig.dtype ?? "int8";
 
     promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: "webgpu" });
     await promptCompressor.init();
