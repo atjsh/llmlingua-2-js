@@ -1,6 +1,6 @@
 {
   "name": "@atjsh/llmlingua-2",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "packageManager": "yarn@4.9.1",
   "description": "JavaScript/TypeScript Implementation of LLMLingua-2",
   "license": "MIT",
