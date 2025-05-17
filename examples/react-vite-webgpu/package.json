@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@atjsh/llmlingua-2": "^1.0.7",
+    "@atjsh/llmlingua-2": "^1.0.10",
     "@huggingface/transformers": "3.5.0",
     "@tensorflow/tfjs": "^4.22.0",
     "dompurify": "^3.1.2",

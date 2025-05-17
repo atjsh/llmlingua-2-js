@@ -32,9 +32,13 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [tps, setTps] = useState(null);
   const [numTokens, setNumTokens] = useState(null);
+  const [compressionRate, setCompressionRate] = useState(95);
 
   function onEnter(message) {
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: message, compressionRate },
+    ]);
     setTps(null);
     setIsRunning(true);
     setInput("");
@@ -63,9 +67,12 @@ function App() {
   useEffect(() => {
     // Create the worker if it does not yet exist.
     if (!worker.current) {
-      worker.current = new Worker(new URL("./prompt-compressor.worker.js", import.meta.url), {
-        type: "module",
-      });
+      worker.current = new Worker(
+        new URL("./prompt-compressor.worker.js", import.meta.url),
+        {
+          type: "module",
+        }
+      );
       worker.current.postMessage({ type: "check" }); // Do a feature check
     }
 
@@ -90,14 +97,14 @@ function App() {
                 return { ...item, ...e.data };
               }
               return item;
-            }),
+            })
           );
           break;
 
         case "done":
           // Model file loaded: remove the progress item from the list.
           setProgressItems((prev) =>
-            prev.filter((item) => item.file !== e.data.file),
+            prev.filter((item) => item.file !== e.data.file)
           );
           break;
 
@@ -191,7 +198,10 @@ function App() {
       {status === null && messages.length === 0 && (
         <div className="h-full overflow-auto scrollbar-thin flex justify-center items-center flex-col relative">
           <div className="flex flex-col items-center mb-1 max-w-[500px] text-center">
-            <h1 className="text-4xl font-bold mb-1">LLMLingua-2 <br />in your Web Browser!</h1>
+            <h1 className="text-4xl font-bold mb-1">
+              LLMLingua-2 <br />
+              in your Web Browser!
+            </h1>
           </div>
 
           <div className="flex flex-col items-center px-4">
@@ -207,7 +217,8 @@ function App() {
                 className="underline"
               >
                 GitHub
-              </a>.
+              </a>
+              .
             </p>
 
             {error && (
@@ -265,9 +276,7 @@ function App() {
                   <div className="font-bold">
                     length: {msg.length.toLocaleString()}
                   </div>
-                  <div className="text-sm">
-                    {msg.slice(0, 200) + "..."}
-                  </div>
+                  <div className="text-sm">{msg.slice(0, 200) + "..."}</div>
                 </div>
               ))}
             </div>
@@ -311,46 +320,66 @@ function App() {
         </div>
       )}
 
-      <div className="mt-2 border dark:bg-gray-700 rounded-lg w-[600px] max-w-[80%] max-h-[200px] mx-auto relative mb-3 flex">
-        <textarea
-          ref={textareaRef}
-          className="scrollbar-thin w-[550px] dark:bg-gray-700 px-3 py-4 rounded-lg bg-transparent border-none outline-none text-gray-800 disabled:text-gray-400 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 disabled:placeholder-gray-200 resize-none disabled:cursor-not-allowed"
-          placeholder="Enter the prompt that is really really long..."
-          type="text"
-          rows={1}
-          value={input}
-          disabled={status !== "ready"}
-          title={status === "ready" ? "Model is ready" : "Model not loaded yet"}
-          onKeyDown={(e) => {
-            if (
-              input.length > 0 &&
-              !isRunning &&
-              e.key === "Enter" &&
-              !e.shiftKey
-            ) {
-              e.preventDefault(); // Prevent default behavior of Enter key
-              onEnter(input);
+      <div className="flex flex-col items-center mb-4">
+        <div className="mt-2 border dark:bg-gray-700 rounded-lg w-[600px] max-w-[80%] max-h-[200px] mx-auto relative mb-3 flex">
+          <textarea
+            ref={textareaRef}
+            className="scrollbar-thin w-[550px] dark:bg-gray-700 px-3 py-4 rounded-lg bg-transparent border-none outline-none text-gray-800 disabled:text-gray-400 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 disabled:placeholder-gray-200 resize-none disabled:cursor-not-allowed"
+            placeholder="Enter the prompt that is really really long..."
+            type="text"
+            rows={1}
+            value={input}
+            disabled={status !== "ready"}
+            title={
+              status === "ready" ? "Model is ready" : "Model not loaded yet"
             }
-          }}
-          onInput={(e) => setInput(e.target.value)}
-        />
-        {isRunning ? (
-          <div className="cursor-pointer" onClick={onInterrupt}>
-            <StopIcon className="h-8 w-8 p-1 rounded-md text-gray-800 dark:text-gray-100 absolute right-3 bottom-3" />
-          </div>
-        ) : input.length > 0 ? (
-          <div className="cursor-pointer" onClick={() => onEnter(input)}>
-            <ArrowRightIcon
-              className={`h-8 w-8 p-1 bg-gray-800 dark:bg-gray-100 text-white dark:text-black rounded-md absolute right-3 bottom-3`}
-            />
-          </div>
-        ) : (
-          <div>
-            <ArrowRightIcon
-              className={`h-8 w-8 p-1 bg-gray-200 dark:bg-gray-600 text-gray-50 dark:text-gray-800 rounded-md absolute right-3 bottom-3`}
-            />
-          </div>
-        )}
+            onKeyDown={(e) => {
+              if (
+                input.length > 0 &&
+                !isRunning &&
+                e.key === "Enter" &&
+                !e.shiftKey
+              ) {
+                e.preventDefault(); // Prevent default behavior of Enter key
+                onEnter(input);
+              }
+            }}
+            onInput={(e) => setInput(e.target.value)}
+          />
+          {isRunning ? (
+            <div className="cursor-pointer" onClick={onInterrupt}>
+              <StopIcon className="h-8 w-8 p-1 rounded-md text-gray-800 dark:text-gray-100 absolute right-3 bottom-3" />
+            </div>
+          ) : input.length > 0 ? (
+            <div className="cursor-pointer" onClick={() => onEnter(input)}>
+              <ArrowRightIcon
+                className={`h-8 w-8 p-1 bg-gray-800 dark:bg-gray-100 text-white dark:text-black rounded-md absolute right-3 bottom-3`}
+              />
+            </div>
+          ) : (
+            <div>
+              <ArrowRightIcon
+                className={`h-8 w-8 p-1 bg-gray-200 dark:bg-gray-600 text-gray-50 dark:text-gray-800 rounded-md absolute right-3 bottom-3`}
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center space-x-2 mb-2">
+          <label htmlFor="compressionRate">Compression Rate</label>
+          <input
+            type="range"
+            name="compressionRate"
+            id="compressionRate"
+            min="0"
+            max="100"
+            value={compressionRate}
+            onChange={(e) => setCompressionRate(e.target.value)}
+            disabled={status !== "ready"}
+          />
+          <span className="text-sm text-gray-500 dark:text-gray-300">
+            {compressionRate}%
+          </span>
+        </div>
       </div>
 
       <p className="text-xs text-gray-400 text-center mb-3">

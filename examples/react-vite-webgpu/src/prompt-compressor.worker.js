@@ -32,7 +32,7 @@ async function load() {
         data: "Loading model...",
     });
 
-    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8" });
+    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8", device: "webgpu" });
     await compressor.init();
 
     self.postMessage({ status: "ready" });
@@ -41,13 +41,16 @@ async function load() {
 async function generate(messages) {
     self.postMessage({ status: "start" });
 
-    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8" });
+    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8", device: "webgpu" });
     await compressor.init();
 
     console.log({ messages });
 
+    const input = messages[messages.length - 1]
+    const compressionRate = (input.compressionRate / 100).toFixed(5)
+    const inputText = input.content;
 
-    const result = await compressor.compress_prompt(messages[messages.length - 1].content, { rate: 0.8 })
+    const result = await compressor.compress_prompt(inputText, { rate: compressionRate })
 
     console.log({ result });
     self.postMessage({
