@@ -17,6 +17,23 @@ LLMLingua-2는 BERT 수준의 인코더를 사용하여 GPT-4로부터 데이터
 
 **이 라이브러리는 활발히 개발 중이며 API는 변경될 수 있다.**
 
+# 데모
+
+## 지금 테스트하기
+
+> **참고:** 데모를 웹에 배포하지 않은 상태이다. 그동안 **로컬에서 데모를 실행할 수 있다.**
+
+## 소스 코드
+
+데모는 `examples` 디렉토리에서 사용할 수 있다. 다음 명령어로 실행할 수 있다:
+
+```sh
+cd examples/react-vite-webgpu
+npm install
+```
+
+[자세히 알아보기](/examples/react-vite-webgpu/README.md)
+
 # 설치
 
 ## 필수 조건
