@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-import { PromptCompressorLLMLingua2, DataType } from "./prompt-compressor.js";
+import { PromptCompressorLLMLingua2 } from "./prompt-compressor.js";
 
-export { PromptCompressorLLMLingua2, DataType };
+export { PromptCompressorLLMLingua2 };

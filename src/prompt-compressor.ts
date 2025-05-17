@@ -8,6 +8,7 @@ import {
   RobertaForTokenClassification,
   Tensor,
   TokenClassifierOutput,
+  TransformersJSConfig,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { Tiktoken } from "js-tiktoken/lite";
@@ -20,17 +21,6 @@ import {
   replace_added_token,
 } from "./utils.js";
 
-export type DataType =
-  | "auto"
-  | "fp32"
-  | "fp16"
-  | "q8"
-  | "int8"
-  | "uint8"
-  | "q4"
-  | "bnb4"
-  | "q4f16";
-
 export class PromptCompressorLLMLingua2 {
   private model: RobertaForTokenClassification;
   private tokenizer: PreTrainedTokenizer;
@@ -41,11 +31,7 @@ export class PromptCompressorLLMLingua2 {
 
   constructor(
     private readonly modelName: string,
-    private readonly modelOptions: {
-      dtype: DataType;
-    } = {
-      dtype: "uint8" satisfies DataType,
-    },
+    private readonly modelOptions?: TransformersJSConfig,
     private readonly llmlingua2Config = {
       max_batch_size: 50,
       max_force_token: 100,
@@ -65,9 +51,7 @@ export class PromptCompressorLLMLingua2 {
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelName, {
       config: {
         ...config,
-        "transformers.js_config": {
-          dtype: this.modelOptions.dtype,
-        },
+        ...this.modelOptions,
       },
     });
 
@@ -86,7 +70,7 @@ export class PromptCompressorLLMLingua2 {
         config: {
           ...config,
         },
-        dtype: this.modelOptions.dtype,
+        ...this.modelOptions,
       }
     );
   }
