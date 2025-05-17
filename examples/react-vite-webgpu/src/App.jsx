@@ -417,9 +417,19 @@ function App() {
     </div>
   ) : (
     <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
-      WebGPU is not supported
-      <br />
-      by this browser :&#40;
+      <div>
+        <div>
+          WebGPU is not supported
+          <br />
+          by this browser :&#40; <br /> Sorry!
+        </div>
+        <br />
+        You can check the{" "}
+        <a href="https://github.com/atjsh/llmlingua-2-js" className="underline">
+          source code
+        </a>{" "}
+        instead.
+      </div>
     </div>
   );
 }
