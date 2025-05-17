@@ -13,8 +13,6 @@ let promptCompressor = null;
 
 async function check() {
     try {
-        console.log('what');
-
         const adapter = await navigator.gpu.requestAdapter();
         if (!adapter) {
             throw new Error("WebGPU is not supported (no adapter found)");
