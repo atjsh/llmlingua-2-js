@@ -1,4 +1,4 @@
-# LLMLingua-2의 JavaScript/TypeScript 구현체
+# LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
 
 [[English]](README.md)
 
