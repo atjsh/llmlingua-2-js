@@ -21,7 +21,7 @@ LLMLingua-2는 BERT 수준의 인코더를 사용하여 GPT-4로부터 데이터
 
 ## 지금 테스트하기
 
-> **참고:** 데모를 웹에 배포하지 않은 상태이다. 그동안 **로컬에서 데모를 실행할 수 있다.**
+라이브러리를 [여기](https://atjsh.github.io/llmlingua-2-js)에서 테스트해볼 수 있다. WebGPU 지원 브라우저가 필요하다 (Google Chrome 등).
 
 ## 소스 코드
 
