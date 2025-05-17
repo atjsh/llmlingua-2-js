@@ -29,8 +29,6 @@ export default function Chat({ messages }) {
                       <div>
                         <div className="markdown">{msg.content}</div>
                         <br />
-                        <hr />
-                        <br />
                         <div>
                           <p className=" text-xs">
                             before: {msg.inputLength.toLocaleString()}, after:{" "}

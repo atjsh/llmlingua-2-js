@@ -10,13 +10,22 @@ const stopping_criteria = new InterruptableStoppingCriteria();
  */
 let promptCompressor = null;
 
+let webGPUAvailable = false;
+
 
 async function check() {
     try {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (!adapter) {
-            throw new Error("WebGPU is not supported (no adapter found)");
+        if (navigator.gpu) {
+            const adapter = await navigator.gpu?.requestAdapter();
+            if (adapter) {
+                webGPUAvailable = true;
+            }
+
+            return;
         }
+
+        webGPUAvailable = false;
+
     } catch (e) {
         self.postMessage({
             status: "error",
@@ -33,10 +42,10 @@ async function load(loadConfig) {
 
     const dtype = loadConfig.dtype ?? "int8";
 
-    promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: "webgpu" });
+    promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: webGPUAvailable ? "webgpu" : "auto" });
     await promptCompressor.init();
 
-    self.postMessage({ status: "ready" });
+    self.postMessage({ status: "ready", device: webGPUAvailable ? "webgpu" : "auto" });
 }
 
 async function generate(messages) {

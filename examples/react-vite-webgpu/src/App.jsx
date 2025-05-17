@@ -20,6 +20,7 @@ function App() {
 
   // Model loading and progress
   const [status, setStatus] = useState(null);
+  const [deviceMode, setDeviceMode] = useState(null);
   const [error, setError] = useState(null);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [progressItems, setProgressItems] = useState([]);
@@ -110,6 +111,7 @@ function App() {
         case "ready":
           // Pipeline ready: the worker is ready to accept messages.
           setStatus("ready");
+          setDeviceMode(e.data.device);
           break;
 
         case "start":
@@ -192,7 +194,7 @@ function App() {
     }
   }, [messages, isRunning]);
 
-  return IS_WEBGPU_AVAILABLE ? (
+  return (
     <div className="flex flex-col h-screen mx-auto items justify-end text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900">
       {status === null && messages.length === 0 && (
         <div className="h-full overflow-auto scrollbar-thin flex justify-center items-center flex-col relative">
@@ -392,21 +394,35 @@ function App() {
             </div>
           )}
         </div>
-        <div className="flex items-center space-x-2 mb-2">
-          <label htmlFor="compressionRate">Compression Rate</label>
-          <input
-            type="range"
-            name="compressionRate"
-            id="compressionRate"
-            min="0"
-            max="100"
-            value={compressionRate}
-            onChange={(e) => setCompressionRate(e.target.value)}
-            disabled={status !== "ready"}
-          />
-          <span className="text-sm text-gray-500 dark:text-gray-300">
-            {compressionRate}%
-          </span>
+        <div className="flex flex-col items-center space-x-2 mb-2">
+          <div>
+            WebGPU availability:{" "}
+            <span className="font-medium">
+              {IS_WEBGPU_AVAILABLE ? "Yes" : "No"}
+            </span>{" "}
+            <br />
+            {deviceMode && (
+              <>
+                Device Mode: <span className="font-medium">{deviceMode}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="compressionRate">Compression Rate</label>
+            <input
+              type="range"
+              name="compressionRate"
+              id="compressionRate"
+              min="0"
+              max="100"
+              value={compressionRate}
+              onChange={(e) => setCompressionRate(e.target.value)}
+              disabled={status !== "ready"}
+            />
+            <span className="text-sm text-gray-500 dark:text-gray-300">
+              {compressionRate}%
+            </span>
+          </div>
         </div>
       </div>
 
@@ -414,22 +430,6 @@ function App() {
         Warning. This is a <b>Experimental Technology Demo</b>. <br />
         Open the <b>browser console</b> for live logs.
       </p>
-    </div>
-  ) : (
-    <div className="fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] text-white text-2xl font-semibold flex justify-center items-center text-center">
-      <div>
-        <div>
-          WebGPU is not supported
-          <br />
-          by this browser :&#40; <br /> Sorry!
-        </div>
-        <br />
-        You can check the{" "}
-        <a href="https://github.com/atjsh/llmlingua-2-js" className="underline">
-          source code
-        </a>{" "}
-        instead.
-      </div>
     </div>
   );
 }
