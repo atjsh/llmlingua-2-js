@@ -7,10 +7,9 @@ import Progress from "./components/Progress";
 import { EXAMPLES } from "./long-texts";
 import RetryIcon from "./components/icons/RetryIcon";
 
-const IS_WEBGPU_AVAILABLE = !!navigator.gpu;
 const STICKY_SCROLL_THRESHOLD = 120;
 
-const availableDtypes = ["int8", "fp16", "q8", "uint8", "q4", "bnb4", "q4f16"];
+const availableDtypes = ["int8", "q8", "uint8", "q4", "bnb4"];
 
 function App() {
   // Create a reference to the worker object.

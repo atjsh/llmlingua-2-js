@@ -44,7 +44,19 @@ async function load(loadConfig) {
     const dtype = loadConfig.dtype ?? "int8";
 
     promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: webGPUAvailable ? "webgpu" : "auto" });
-    await promptCompressor.init();
+
+    try {
+        await promptCompressor.init();
+
+    } catch (error) {
+        console.error(error);
+
+        self.postMessage({
+            status: "error",
+            data: error.toString(),
+        });
+        return;
+    }
 
     self.postMessage({ status: "ready", device: webGPUAvailable ? "webgpu" : "auto" });
 }
