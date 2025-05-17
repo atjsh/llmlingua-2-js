@@ -1,13 +1,14 @@
-import { InterruptableStoppingCriteria, env } from "@huggingface/transformers";
+import { InterruptableStoppingCriteria } from "@huggingface/transformers";
 import { PromptCompressorLLMLingua2 } from '@atjsh/llmlingua-2';
-
-env.localModelPath = '/models/';
-env.allowRemoteModels = false;
-env.allowLocalModels = true
 
 
 const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
 const stopping_criteria = new InterruptableStoppingCriteria();
+
+/**
+ * @type {PromptCompressorLLMLingua2}
+ */
+let promptCompressor = null;
 
 
 async function check() {
@@ -26,14 +27,16 @@ async function check() {
     }
 }
 
-async function load() {
+async function load(loadConfig) {
     self.postMessage({
         status: "loading",
         data: "Loading model...",
     });
 
-    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8", device: "webgpu" });
-    await compressor.init();
+    const dtype = loadConfig.dtype || "int8";
+
+    promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: "webgpu" });
+    await promptCompressor.init();
 
     self.postMessage({ status: "ready" });
 }
@@ -41,16 +44,13 @@ async function load() {
 async function generate(messages) {
     self.postMessage({ status: "start" });
 
-    const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8", device: "webgpu" });
-    await compressor.init();
-
     console.log({ messages });
 
     const input = messages[messages.length - 1]
     const compressionRate = (input.compressionRate / 100).toFixed(5)
     const inputText = input.content;
 
-    const result = await compressor.compress_prompt(inputText, { rate: compressionRate })
+    const result = await promptCompressor.compress_prompt(inputText, { rate: compressionRate })
 
     console.log({ result });
     self.postMessage({
@@ -77,7 +77,7 @@ self.addEventListener("message", async (e) => {
             break;
 
         case "load":
-            load();
+            load(data);
             break;
 
         case "generate":

@@ -1,33 +1,21 @@
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-
 import BotIcon from "./icons/BotIcon";
 import UserIcon from "./icons/UserIcon";
 
 import "./Chat.css";
-import { useEffect } from "react";
-
-function render(text) {
-  return DOMPurify.sanitize(marked.parse(text));
-}
 
 export default function Chat({ messages }) {
   const empty = messages.length === 0;
 
-  useEffect(() => {
-    window.MathJax.typeset();
-  }, [messages]);
-
   return (
     <div
-      className={`flex-1 p-6 max-w-[960px] w-full ${empty ? "flex flex-col items-center justify-end" : "space-y-4"}`}
+      className={`flex-1 p-6 max-w-[960px] w-full ${
+        empty ? "flex flex-col items-center justify-end" : "space-y-4"
+      }`}
     >
       {empty ? (
         <>
           <div className="text-xl">Ready!</div>
-          <p>
-            Pick a example text from the list, or enter your own text.
-          </p>
+          <p>Pick a example text from the list, or enter your own text.</p>
         </>
       ) : (
         messages.map((msg, i) => (
@@ -38,12 +26,7 @@ export default function Chat({ messages }) {
                 <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4">
                   <p className="min-h-6 text-gray-800 dark:text-gray-200 overflow-wrap-anywhere">
                     {msg.content.length > 0 ? (
-                      <span
-                        className="markdown"
-                        dangerouslySetInnerHTML={{
-                          __html: render(msg.content),
-                        }}
-                      />
+                      <span className="markdown">{msg.content}</span>
                     ) : (
                       <span className="h-6 flex items-center gap-1">
                         <span className="w-2.5 h-2.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-pulse"></span>
