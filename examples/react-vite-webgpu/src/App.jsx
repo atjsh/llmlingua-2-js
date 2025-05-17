@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Chat from "./components/Chat";
 import ArrowRightIcon from "./components/icons/ArrowRightIcon";
@@ -354,8 +354,8 @@ function App() {
         <div className="mt-2 border dark:bg-gray-700 rounded-lg w-[600px] max-w-[80%] max-h-[200px] mx-auto relative mb-3 flex">
           <textarea
             ref={textareaRef}
-            className="scrollbar-thin w-[550px] dark:bg-gray-700 px-3 py-4 rounded-lg bg-transparent border-none outline-none text-gray-800 disabled:text-gray-400 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 disabled:placeholder-gray-200 resize-none disabled:cursor-not-allowed"
-            placeholder="Enter the prompt that is really really long..."
+            className="scrollbar-thin w-[550px] dark:bg-gray-700 px-3 py-1 rounded-lg bg-transparent border-none outline-none text-gray-800 disabled:text-gray-400 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 disabled:placeholder-gray-200 resize-none disabled:cursor-not-allowed"
+            placeholder="Enter the prompt here..."
             type="text"
             rows={1}
             value={input}
@@ -394,19 +394,7 @@ function App() {
             </div>
           )}
         </div>
-        <div className="flex flex-col items-center space-x-2 mb-2">
-          <div>
-            WebGPU availability:{" "}
-            <span className="font-medium">
-              {IS_WEBGPU_AVAILABLE ? "Yes" : "No"}
-            </span>{" "}
-            <br />
-            {deviceMode && (
-              <>
-                Device Mode: <span className="font-medium">{deviceMode}</span>
-              </>
-            )}
-          </div>
+        <div className="flex flex-col items-center">
           <div className="flex items-center gap-2">
             <label htmlFor="compressionRate">Compression Rate</label>
             <input
@@ -423,13 +411,17 @@ function App() {
               {compressionRate}%
             </span>
           </div>
+          <p className="text-xs text-gray-400 text-center mb-3">
+            Warning. This is a <b>Experimental Technology Demo</b>. <br />
+            Open the <b>browser console</b> for live logs.{" "}
+            {deviceMode && (
+              <>
+                Engine: <span>{deviceMode}</span>
+              </>
+            )}
+          </p>
         </div>
       </div>
-
-      <p className="text-xs text-gray-400 text-center mb-3">
-        Warning. This is a <b>Experimental Technology Demo</b>. <br />
-        Open the <b>browser console</b> for live logs.
-      </p>
     </div>
   );
 }

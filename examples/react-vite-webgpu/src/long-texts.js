@@ -1,5 +1,10 @@
 export const EXAMPLES = [
     `
+https://en.wikipedia.org/wiki/Wikipedia
+
+Wikipedia is a free online encyclopedia, written and maintained by a community of volunteers, known as Wikipedians, through open collaboration and the wiki software MediaWiki. Founded by Jimmy Wales and Larry Sanger on January 15, 2001, Wikipedia has been hosted since 2003 by the Wikimedia Foundation, an American nonprofit organization funded mainly by donations from readers. Wikipedia is the largest and most-read reference work in history.
+`,
+    `
 대한민국 저작권법. 제1장 총칙. 제3조 (외국인의 저작물). 
 (1) 외국인의 저작물은 대한민국이 가입 또는 체결한 조약에 따라 보호된다.
 (2) 대한민국 내에 상시 거주하는 외국인(무국적자 및 대한민국 내에 주된 사무소가 있는 외국법인을 포함한다)의 저작물과 맨 처음 대한민국 내에서 공표된 외국인의 저작물(외국에서 공표된 날로부터 30일 이내에 대한민국 내에서 공표된 저작물을 포함한다)은 이 법에 따라 보호된다.
