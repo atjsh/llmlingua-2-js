@@ -17,6 +17,23 @@ LLMLingua-2, a small-size yet powerful prompt compression method trained via dat
 
 **This library is under active development and the API is subject to change.**
 
+# Demo
+
+## Test Now
+
+> **Note:** We'll be back soon when we deploy the demo on the web! in the meantime, **you can run the demo locally.**
+
+## Source Code
+
+The demo is available in the `examples` directory. You can run it using the following command:
+
+```sh
+cd examples/react-vite-webgpu
+npm install
+```
+
+[Learn More](/examples/react-vite-webgpu/README.md)
+
 # Installation
 
 ## Prerequisites
