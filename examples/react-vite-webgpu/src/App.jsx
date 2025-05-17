@@ -700,16 +700,11 @@ function App() {
       {status === null && messages.length === 0 && (
         <div className="h-full overflow-auto scrollbar-thin flex justify-center items-center flex-col relative">
           <div className="flex flex-col items-center mb-1 max-w-[500px] text-center">
-            <h1 className="text-4xl font-bold mb-1">
-              LLMLingua-2 <br />
-              in your Web Browser!
-            </h1>
+            <h1 className="text-4xl font-bold mb-1">Compress any text!</h1>
           </div>
 
           <div className="flex flex-col items-center px-4">
-            <p className="max-w-[514px]">
-              Compress any text into shorter text!
-            </p>
+            <p className="max-w-[514px]">LLMLingua-2 in your Web Browser!</p>
             <p className="max-w-[514px] mb-4">
               Check out the source code for this demo on{" "}
               <a
