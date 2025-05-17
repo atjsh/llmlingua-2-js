@@ -42,6 +42,7 @@ npm install
 
 - [**@huggingface/transformers**](https://github.com/huggingface/transformers.js)
 - [**@tensorflow/tfjs**](https://github.com/tensorflow/tfjs)
+- [**js-tiktoken**](https://www.npmjs.com/package/js-tiktoken)
 
 특히, `@huggingface/transformers` 라이브러리는 높은 성능을 달성하기 위해 다양한 계산 최적화를 활용한다. 실행 환경이 이러한 라이브러리의 최소 요구 사항을 지원하는지 확인하라.
 
@@ -58,7 +59,7 @@ npm install
 먼저, 종속성을 설치해야 한다:
 
 ```sh
-npm install @huggingface/transformers @tensorflow/tfjs tiktoken
+npm install @huggingface/transformers @tensorflow/tfjs js-tiktoken
 ```
 
 그런 다음, 라이브러리를 설치한다:
