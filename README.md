@@ -73,7 +73,7 @@ npm install @atjsh/llmlingua-2
 ```typescript
 import { PromptCompressorLLMLingua2 } from "@atjsh/llmlingua-2";
 
-const modelName = "YOUR_MODEL_NAME"; // e.g., "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
+const modelName = "YOUR_MODEL_NAME"; // e.g., "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank"
 
 const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8" });
 await compressor.init();
