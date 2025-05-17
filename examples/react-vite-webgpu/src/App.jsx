@@ -308,10 +308,13 @@ function App() {
                   className="m-1 border dark:border-gray-600 rounded-md p-2 bg-gray-100 dark:bg-gray-700 cursor-pointer"
                   onClick={() => onEnter(msg)}
                 >
-                  <div className="font-bold">
-                    length: {msg.length.toLocaleString()}
+                  <span className="font-bold">
+                    {msg.length.toLocaleString()}
+                  </span>{" "}
+                  characters
+                  <div className="text-xs opacity-60">
+                    {msg.slice(0, 50) + "..."}
                   </div>
-                  <div className="text-xs">{msg.slice(0, 50) + "..."}</div>
                 </div>
               ))}
             </div>
