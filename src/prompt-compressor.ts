@@ -114,13 +114,21 @@ export class PromptCompressorLLMLingua2 {
 
     const n_original_token = this.getTokenLength(context);
 
+    console.log(
+      "original token length: appx. ",
+      n_original_token.toLocaleString()
+    );
+
     for (const [original, newToken] of Object.entries(token_map)) {
       context = context.replace(new RegExp(original, "g"), newToken);
     }
 
     const chunkedContexts = this.chunkContext(context, chunkEndTokenSet);
 
-    console.log("chunking finished");
+    console.log(
+      "chunking finished. chunk count: ",
+      chunkedContexts.length.toLocaleString()
+    );
 
     let final_reduce_rate = 1.0 - rate;
 
