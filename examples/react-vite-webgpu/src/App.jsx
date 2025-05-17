@@ -307,6 +307,9 @@ function App() {
                   className="m-1 border dark:border-gray-600 rounded-md p-2 bg-gray-100 dark:bg-gray-700 cursor-pointer"
                   onClick={() => onEnter(msg)}
                 >
+                  <div className="text-xs text-gray-500 dark:text-gray-300">
+                    Long Context Example {i + 1}:
+                  </div>
                   <span className="font-bold">
                     {msg.length.toLocaleString()}
                   </span>{" "}
