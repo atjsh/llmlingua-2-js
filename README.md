@@ -1,4 +1,4 @@
-# JavaScript/TypeScript Implementation of LLMLingua-2
+# JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
 
 [[한국어]](README.ko-kr.md)
 
