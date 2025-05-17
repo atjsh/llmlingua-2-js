@@ -225,7 +225,7 @@ function App() {
                 rel="noreferrer"
                 className="underline"
               >
-                @atjsh/llmlingua-2-js
+                @atjsh/llmlingua-2
               </a>
               .
             </p>
