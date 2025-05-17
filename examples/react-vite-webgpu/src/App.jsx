@@ -198,7 +198,7 @@ function App() {
         <div className="h-full overflow-auto scrollbar-thin flex justify-center items-center flex-col relative">
           <div className="flex flex-col items-center mb-1 max-w-[500px] text-center">
             <h1 className="text-4xl font-bold mb-1">
-              🤖🗜️ <br /> Compress any text!
+              🤖🗜️ <br /> Compress Long LLM Prompt!
             </h1>
           </div>
 
