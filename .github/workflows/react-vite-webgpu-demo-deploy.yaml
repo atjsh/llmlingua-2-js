@@ -22,7 +22,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     env:
-      working-directory: examples/react-vite-webgpu
+      working-directory: ./examples/react-vite-webgpu
 
     steps:
       - name: Checkout
