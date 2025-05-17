@@ -71,7 +71,12 @@ async function generate(messages) {
     const inputText = input.content;
     const inputLength = inputText.length;
 
+    const start = performance.now();
+
     const result = await promptCompressor.compress_prompt(inputText, { rate: compressionRate })
+
+    const end = performance.now();
+    const time = end - start;
 
     const compressedLength = result.length;
 
@@ -82,6 +87,7 @@ async function generate(messages) {
             result: result,
             inputLength: inputLength,
             compressedLength: compressedLength,
+            time: time,
         }
     })
 

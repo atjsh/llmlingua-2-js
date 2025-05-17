@@ -30,18 +30,19 @@ export default function Chat({ messages }) {
                         <div className="markdown">{msg.content}</div>
                         <br />
                         <div>
-                          <p className=" text-xs">
-                            before: {msg.inputLength.toLocaleString()}, after:{" "}
+                          <div className=" text-xs">
+                            ⏱️ {msg.time.toFixed(2)} ms, before:{" "}
+                            {msg.inputLength.toLocaleString()}, after:{" "}
                             {msg.compressedLength.toLocaleString()}
-                          </p>
-                          <p>
+                          </div>
+                          <div>
                             🗑️{" "}
                             {(
                               100 -
                               (msg.compressedLength / msg.inputLength) * 100
                             ).toFixed(2)}
                             % of characters removed
-                          </p>
+                          </div>
                         </div>
                       </div>
                     ) : (

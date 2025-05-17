@@ -137,6 +137,7 @@ function App() {
                 content: last.content + output.result,
                 inputLength: output.inputLength,
                 compressedLength: output.compressedLength,
+                time: output.time,
               };
               return cloned;
             });
