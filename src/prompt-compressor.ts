@@ -11,9 +11,9 @@ import {
   TransformersJSConfig,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
+import { chunk } from "es-toolkit/array";
 import { Tiktoken } from "js-tiktoken/lite";
 import o200k_base from "js-tiktoken/ranks/o200k_base";
-import { chunk } from "es-toolkit/array";
 
 import {
   get_pure_token,
