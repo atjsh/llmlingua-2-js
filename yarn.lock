@@ -12,14 +12,13 @@ __metadata:
     "@huggingface/transformers": "npm:^3.5.1"
     "@tensorflow/tfjs": "npm:^4.22.0"
     "@types/node": "npm:^22.15.18"
+    es-toolkit: "npm:^1.38.0"
     js-tiktoken: "npm:^1.0.20"
-    tiktoken: "npm:^1.0.21"
     typescript: "npm:^5.8.3"
   peerDependencies:
     "@huggingface/transformers": "*"
     "@tensorflow/tfjs": "*"
     js-tiktoken: "*"
-    tiktoken: "*"
   languageName: unknown
   linkType: soft
 
@@ -695,6 +694,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"es-toolkit@npm:^1.38.0":
+  version: 1.38.0
+  resolution: "es-toolkit@npm:1.38.0"
+  dependenciesMeta:
+    "@trivago/prettier-plugin-sort-imports@4.3.0":
+      unplugged: true
+    prettier-plugin-sort-re-exports@0.0.1:
+      unplugged: true
+  checksum: 10c0/1bffc2d8dbe8db45969cf6674a674bdf9d40d803c923b01645b8a433f43f9304b1d369b6cde2a6ef3889a5aa71ddc741bf8e4103b4d4b48a366e04b4b3d30519
+  languageName: node
+  linkType: hard
+
 "es6-error@npm:^4.1.1":
   version: 4.1.1
   resolution: "es6-error@npm:4.1.1"
@@ -1256,13 +1267,6 @@ __metadata:
     mkdirp: "npm:^3.0.1"
     yallist: "npm:^5.0.0"
   checksum: 10c0/d4679609bb2a9b48eeaf84632b6d844128d2412b95b6de07d53d8ee8baf4ca0857c9331dfa510390a0727b550fd543d4d1a10995ad86cdf078423fbb8d99831d
-  languageName: node
-  linkType: hard
-
-"tiktoken@npm:^1.0.21":
-  version: 1.0.21
-  resolution: "tiktoken@npm:1.0.21"
-  checksum: 10c0/d972514f57cf6d00aefdb03b5fc742c3568d8f759afc78900ef04cb2bd973df5aa99f3e18a91389756d68d6cb9709f6e4a951ccbe91881067af9295866942a50
   languageName: node
   linkType: hard
 

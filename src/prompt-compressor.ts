@@ -13,6 +13,7 @@ import {
 import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { Tiktoken } from "js-tiktoken/lite";
 import o200k_base from "js-tiktoken/ranks/o200k_base";
+import { chunk } from "es-toolkit/array";
 
 import {
   get_pure_token,
@@ -315,7 +316,12 @@ export class PromptCompressorLLMLingua2 {
 
     const compressed_chunk_strings_flat: string[] = [];
 
-    for (const context of contexts) {
+    const chunked_contexts = chunk(
+      contexts,
+      this.llmlingua2Config.max_batch_size
+    );
+
+    for (const context of chunked_contexts) {
       const { input_ids, attention_mask } = await this.tokenizer(context, {
         padding: true,
       });
@@ -333,11 +339,15 @@ export class PromptCompressorLLMLingua2 {
 
       const [batch_size, seq_len, num_classes] = outputs.logits.dims;
 
+      console.log("logits shape:", outputs.logits.dims);
+
       const logits = tensor3d(
         outputs.logits.data,
         [batch_size, seq_len, num_classes],
         "float32"
       );
+
+      console.log("logits tensor created with shape:", logits.shape);
 
       const probs = softmax(logits, -1);
 
