@@ -52,7 +52,9 @@ export class PromptCompressorLLMLingua2 {
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelName, {
       config: {
         ...config,
-        ...this.modelOptions,
+        ...(this.modelOptions
+          ? { "transformers.js_config": this.modelOptions }
+          : {}),
       },
     });
 
@@ -70,8 +72,10 @@ export class PromptCompressorLLMLingua2 {
       {
         config: {
           ...config,
+          ...(this.modelOptions
+            ? { "transformers.js_config": this.modelOptions }
+            : {}),
         },
-        ...this.modelOptions,
       }
     );
   }
@@ -324,6 +328,7 @@ export class PromptCompressorLLMLingua2 {
     for (const context of chunked_contexts) {
       const { input_ids, attention_mask } = await this.tokenizer(context, {
         padding: true,
+        truncation: true,
       });
 
       console.log("input tokenization finished");
