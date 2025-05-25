@@ -13,7 +13,6 @@
     "clean": "rimraf dist",
     "build": "tsc",
     "preversion": "rimraf dist && yarn build",
-    "prepublish": "yarn typedoc",
     "typedoc": "npx typedoc"
   },
   "files": [
@@ -34,6 +33,7 @@
     "@types/node": "^22.15.18",
     "js-tiktoken": "^1.0.20",
     "rimraf": "^6.0.1",
+    "typedoc": "^0.28.4",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
