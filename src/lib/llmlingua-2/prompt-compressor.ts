@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
 import {
+  BertForTokenClassification,
   PreTrainedTokenizer,
-  RobertaForTokenClassification,
   Tensor,
   TokenClassifierOutput,
+  XLMRobertaForTokenClassification,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { chunk } from "es-toolkit/array";
@@ -22,7 +23,9 @@ export class PromptCompressorLLMLingua2 {
   private specialTokens: Set<string>;
 
   constructor(
-    private readonly model: RobertaForTokenClassification,
+    private readonly model:
+      | XLMRobertaForTokenClassification
+      | BertForTokenClassification,
     private readonly tokenizer: PreTrainedTokenizer,
     private readonly getPureToken: GetPureTokenFunction,
     private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
