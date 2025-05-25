@@ -264,7 +264,10 @@ function App() {
                   <select
                     className="border dark:bg-gray-700 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                     value={modelKey}
-                    onChange={(e) => setModelKey(e.target.value)}
+                    onChange={(e) => {
+                      setModelKey(e.target.value);
+                      setDtype(AVAILABLE_MODELS[e.target.value].dtypes[0]);
+                    }}
                   >
                     {Object.keys(AVAILABLE_MODELS).map((key) => (
                       <optgroup
