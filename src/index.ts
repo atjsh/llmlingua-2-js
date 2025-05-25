@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-import { PromptCompressorLLMLingua2 } from "./prompt-compressor.js";
+import * as LLMLingua2 from "./lib/llmlingua-2/index.js";
 
-export { PromptCompressorLLMLingua2 };
+export { LLMLingua2 };

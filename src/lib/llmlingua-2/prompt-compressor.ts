@@ -1,38 +1,32 @@
 // SPDX-License-Identifier: MIT
 
 import {
-  AutoConfig,
-  AutoModelForTokenClassification,
-  AutoTokenizer,
   PreTrainedTokenizer,
   RobertaForTokenClassification,
   Tensor,
   TokenClassifierOutput,
-  TransformersJSConfig,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { chunk } from "es-toolkit/array";
 import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
 
 import {
-  get_pure_token,
-  is_begin_of_new_word,
+  GetPureTokenFunction,
+  IsBeginOfNewWordFunction,
   percentile,
   replace_added_token,
 } from "./utils.js";
 
 export class PromptCompressorLLMLingua2 {
-  private model: RobertaForTokenClassification;
-  private tokenizer: PreTrainedTokenizer;
-  private oai_tokenizer: Tiktoken;
-
   private addedTokens: string[] = [];
   private specialTokens: Set<string>;
 
   constructor(
-    private readonly modelName: string,
-    private readonly modelOptions?: TransformersJSConfig,
+    private readonly model: RobertaForTokenClassification,
+    private readonly tokenizer: PreTrainedTokenizer,
+    private readonly getPureToken: GetPureTokenFunction,
+    private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
+    private readonly oaiTokenizer: Tiktoken,
     private readonly llmlingua2Config = {
       max_batch_size: 50,
       max_force_token: 100,
@@ -43,22 +37,8 @@ export class PromptCompressorLLMLingua2 {
       this.addedTokens.push(`[NEW${i}]`);
     }
 
-    this.oai_tokenizer = new Tiktoken(o200k_base);
-  }
-
-  public async init() {
-    const config = await AutoConfig.from_pretrained(this.modelName);
-
-    this.tokenizer = await AutoTokenizer.from_pretrained(this.modelName, {
-      config: {
-        ...config,
-        ...(this.modelOptions
-          ? { "transformers.js_config": this.modelOptions }
-          : {}),
-      },
-    });
-
     const specialTokensMap = this.tokenizer.special_tokens || {};
+
     this.specialTokens = new Set<string>();
 
     for (const [key, value] of Object.entries(specialTokensMap)) {
@@ -66,18 +46,6 @@ export class PromptCompressorLLMLingua2 {
         this.specialTokens.add(value);
       }
     }
-
-    this.model = await AutoModelForTokenClassification.from_pretrained(
-      this.modelName,
-      {
-        config: {
-          ...config,
-          ...(this.modelOptions
-            ? { "transformers.js_config": this.modelOptions }
-            : {}),
-        },
-      }
-    );
   }
 
   public async compress_prompt(
@@ -224,14 +192,9 @@ export class PromptCompressorLLMLingua2 {
 
       if (this.specialTokens.has(token)) {
       } else if (
-        is_begin_of_new_word(
-          token,
-          this.modelName,
-          force_tokens_original,
-          token_map
-        )
+        this.isBeginOfNewWord(token, force_tokens_original, token_map)
       ) {
-        const pure_token = get_pure_token(token, this.modelName);
+        const pure_token = this.getPureToken(token);
         const prob_no_force = prob;
 
         if (
@@ -247,7 +210,7 @@ export class PromptCompressorLLMLingua2 {
         ]);
         valid_token_probs_no_force.push([prob_no_force]);
       } else {
-        const pure_token = get_pure_token(token, this.modelName);
+        const pure_token = this.getPureToken(token);
 
         words[words.length - 1] += pure_token;
 
@@ -402,7 +365,7 @@ export class PromptCompressorLLMLingua2 {
           const word = words[i];
           const word_prob = word_probs[i];
 
-          const new_token = this.oai_tokenizer.encode(word);
+          const new_token = this.oaiTokenizer.encode(word);
 
           new_token_probs.push(...Array(new_token.length).fill(word_prob));
         }
