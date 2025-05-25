@@ -63,7 +63,8 @@ async function load(loadConfig) {
                     device: webGPUAvailable ? "webgpu" : "auto",
                     dtype: dtype,
                 },
-                oai_tokenizer
+                oai_tokenizer,
+                {}
             )).promptCompressor
         } else {
             throw new Error(`Unsupported model kind: ${modelKind}`);
