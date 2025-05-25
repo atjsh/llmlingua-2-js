@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@atjsh/llmlingua-2": "^1.1.7",
-    "@huggingface/transformers": "3.5.0",
+    "@atjsh/llmlingua-2": "^1.1.8",
+    "@huggingface/transformers": "3.5.1",
     "@tensorflow/tfjs": "^4.22.0",
     "js-tiktoken": "^1.0.20",
     "react": "^18.3.1",
