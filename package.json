@@ -12,7 +12,8 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsc",
-    "preversion": "rimraf dist && yarn build"
+    "preversion": "rimraf dist && yarn build",
+    "typedoc": "npx typedoc src/index.ts"
   },
   "files": [
     "dist",
