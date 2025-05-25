@@ -19,7 +19,7 @@ LLMLingua-2, a small-size yet powerful prompt compression method trained via dat
 
 # Demo
 
-## Test Now
+## Try Now (No Installation Required)
 
 You can test the library [here](https://atjsh.github.io/llmlingua-2-js). WebGPU-enabled browsers are required (Google Chrome is sufficient).
 
