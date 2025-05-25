@@ -15,7 +15,7 @@ LLMLingua-2는 BERT 수준의 인코더를 사용하여 GPT-4로부터 데이터
 
 ## 상태
 
-**이 라이브러리는 활발히 개발 중이며 API는 변경될 수 있다.**
+**이 라이브러리는 지속적으로 개발되고 있는 중이며 API는 변경될 수 있다.**
 
 # 데모
 
@@ -62,19 +62,115 @@ npm install @atjsh/llmlingua-2
 
 # 사용법
 
+## 모델 선택
+
+시작하려면, 사용할 모델을 선택해야 한다. 현재 지원되는 모델은 다음과 같다:
+
+1. **XLM-RoBERTa**
+   - 장점: 높은 정확도
+   - 단점: 느리고, 크기가 약간 큼
+   - 공개 모델: **[atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank](https://huggingface.co/atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank)**
+2. **BERT**
+   - 장점: 빠르고, 작은 크기
+   - 단점: 정확도가 약간 낮음
+   - 공개 모델: **[Arcoldd/llmlingua4j-bert-base-onnx](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx)**
+
+## XLM-RoBERTa 사용 예제
+
 ```typescript
-import { PromptCompressorLLMLingua2 } from "@atjsh/llmlingua-2";
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
 
-const modelName = "YOUR_MODEL_NAME"; // e.g., "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank"
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
 
-const compressor = new PromptCompressorLLMLingua2(modelName, { dtype: "int8" });
-await compressor.init();
+const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
+const oai_tokenizer = new Tiktoken(o200k_base);
 
-const compressedText: string = await compressor.compress_prompt(
+const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(
+  modelName,
+  {
+    device: "auto",
+    dtype: "fp32",
+  },
+  oai_tokenizer,
+  {
+    modelSpecificOptions: {
+      use_external_data_format: true,
+    },
+  }
+);
+
+const compressedText: string = await promptCompressor.compress_prompt(
   "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
   { rate: 0.8 }
 );
+
+console.log({ compressedText });
 ```
+
+## BERT 사용 예제
+
+```typescript
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
+
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
+
+const modelName = "Arcoldd/llmlingua4j-bert-base-onnx";
+const oai_tokenizer = new Tiktoken(o200k_base);
+
+const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(
+  modelName,
+  {
+    device: "auto",
+    dtype: "fp32",
+  },
+  oai_tokenizer,
+  {
+    modelSpecificOptions: {
+      subfolder: "",
+    },
+  }
+);
+
+const compressedText: string = await promptCompressor.compress_prompt(
+  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
+  { rate: 0.8 }
+);
+
+console.log({ compressedText });
+```
+
+## 커스터마이징
+
+`PromptCompressor`를 직접 인스턴스화할 수 있다. 예를 들어, 다음과 같이 할 수 있다:
+
+```typescript
+const promptCompressor = new LLMLingua2.PromptCompressor(
+  model,
+  tokenizer,
+  get_pure_tokens,
+  is_begin_of_new_word,
+  oai_tokenizer
+);
+```
+
+# API 참조
+
+> 현재는 제공되지 않음. 대신, 타입 정의를 참조하라.
+
+# 테스팅
+
+## 단위 테스트
+
+> 현재는 제공되지 않음.
+
+## 통합 테스트
+
+현재, 통합 테스트는 부분적으로 제공된다. 아래 디렉토리에서 확인할 수 있다:
+
+- `src/e2e`
+- `examples/**`
 
 # 라이센스 (License)
 
