@@ -9,7 +9,18 @@ import RetryIcon from "./components/icons/RetryIcon";
 
 const STICKY_SCROLL_THRESHOLD = 120;
 
-const availableDtypes = ["int8", "q8", "uint8", "q4", "bnb4"];
+const AVAILABLE_MODELS = {
+  bert: {
+    name: "Arcoldd/llmlingua4j-bert-base-onnx",
+    description: "Smaller model",
+    dtypes: ["fp32"],
+  },
+  roberta: {
+    name: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
+    description: "Larger model",
+    dtypes: ["int8", "q8", "uint8", "q4", "bnb4"],
+  },
+};
 
 function App() {
   // Create a reference to the worker object.
@@ -25,13 +36,14 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [progressItems, setProgressItems] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
-  const [dtype, setDtype] = useState(availableDtypes[0]);
+  const [modelKey, setModelKey] = useState("bert");
+  const [dtype, setDtype] = useState(AVAILABLE_MODELS[modelKey].dtypes[0]);
 
   // Inputs and outputs
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [tps, setTps] = useState(null);
-  const [numTokens, setNumTokens] = useState(null);
+  const [numTokens] = useState(null);
   const [compressionRate, setCompressionRate] = useState(95);
 
   function onEnter(message) {
@@ -151,6 +163,7 @@ function App() {
 
         case "error":
           setError(e.data.data);
+          setLoadingMessage(e.data.data);
           break;
       }
     };
@@ -201,13 +214,15 @@ function App() {
         <div className="h-full overflow-auto scrollbar-thin flex justify-center items-center flex-col relative">
           <div className="flex flex-col items-center mb-1 max-w-[500px] text-center">
             <h1 className="text-4xl font-bold mb-1">
-              🤖🗜️ <br /> Compress Long LLM Prompt!
+              🤖🗜️ <br /> LLM Context Compressor!
             </h1>
           </div>
 
           <div className="flex flex-col items-center px-4">
             <p className="max-w-[514px] text-center">
-              Long txt, Markdown, or Source codes... <br /> just compress away.
+              Long txt, Markdown, or Source codes... <br />
+              Compress them before sending to LLMs, <br /> to save costs and
+              improve performance.
             </p>
             <br />
             <p className="max-w-[514px] mb-4 text-center">
@@ -242,18 +257,42 @@ function App() {
               </div>
             )}
 
-            <div className="flex flex-row gap-3 items-center mb-4">
-              <select
-                className="border dark:bg-gray-700 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
-                value={dtype}
-                onChange={(e) => setDtype(e.target.value)}
-              >
-                {availableDtypes.map((dtype) => (
-                  <option key={dtype} value={dtype}>
-                    {dtype}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col gap-3 items-center mb-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="model">Model</label>
+                  <select
+                    className="border dark:bg-gray-700 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                    value={modelKey}
+                    onChange={(e) => setModelKey(e.target.value)}
+                  >
+                    {Object.keys(AVAILABLE_MODELS).map((key) => (
+                      <optgroup
+                        label={AVAILABLE_MODELS[key].description}
+                        key={key}
+                      >
+                        <option key={key} value={key}>
+                          {AVAILABLE_MODELS[key].name}
+                        </option>
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="dtype">Dtype</label>
+                  <select
+                    className="border dark:bg-gray-700 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                    value={dtype}
+                    onChange={(e) => setDtype(e.target.value)}
+                  >
+                    {AVAILABLE_MODELS[modelKey].dtypes.map((dtype) => (
+                      <option key={dtype} value={dtype}>
+                        {dtype}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <button
                 className="border px-4 py-2 rounded-lg bg-blue-700 text-white hover:bg-blue-900 disabled:bg-blue-100 disabled:cursor-not-allowed select-none"
@@ -262,6 +301,8 @@ function App() {
                     type: "load",
                     data: {
                       dtype,
+                      modelKind: modelKey,
+                      modelName: AVAILABLE_MODELS[modelKey].name,
                     },
                   });
                   setStatus("loading");

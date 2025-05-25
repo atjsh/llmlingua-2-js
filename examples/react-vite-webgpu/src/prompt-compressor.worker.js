@@ -1,17 +1,17 @@
 import { InterruptableStoppingCriteria } from "@huggingface/transformers";
-import { PromptCompressorLLMLingua2 } from '@atjsh/llmlingua-2';
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
 
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
 
-const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
+const oai_tokenizer = new Tiktoken(o200k_base);
 const stopping_criteria = new InterruptableStoppingCriteria();
 
 /**
- * @type {PromptCompressorLLMLingua2}
+ * @type {LLMLingua2.PromptCompressor}
  */
 let promptCompressor = null;
-
 let webGPUAvailable = false;
-
 
 async function check() {
     try {
@@ -22,11 +22,9 @@ async function check() {
 
                 return;
             }
-
         }
 
         webGPUAvailable = false;
-
     } catch (e) {
         self.postMessage({
             status: "error",
@@ -41,13 +39,40 @@ async function load(loadConfig) {
         data: "Loading model...",
     });
 
-    const dtype = loadConfig.dtype ?? "int8";
-
-    promptCompressor = new PromptCompressorLLMLingua2(modelName, { dtype, device: webGPUAvailable ? "webgpu" : "auto" });
+    const { dtype, modelName, modelKind } = loadConfig;
 
     try {
-        await promptCompressor.init();
-
+        if (modelKind === "bert") {
+            promptCompressor = (await LLMLingua2.WithBERTMultilingual(
+                modelName,
+                {
+                    device: webGPUAvailable ? "webgpu" : "auto",
+                    dtype: dtype,
+                },
+                oai_tokenizer,
+                {
+                    modelSpecificOptions: {
+                        subfolder: "",
+                    },
+                }
+            )).promptCompressor;
+        } else if (modelKind === "roberta") {
+            promptCompressor = (await LLMLingua2.WithXLMRoBERTa(
+                modelName,
+                {
+                    device: webGPUAvailable ? "webgpu" : "auto",
+                    dtype: dtype,
+                },
+                oai_tokenizer,
+                {
+                    modelSpecificOptions: {
+                        use_external_data_format: true,
+                    },
+                }
+            )).promptCompressor
+        } else {
+            throw new Error(`Unsupported model kind: ${modelKind}`);
+        }
     } catch (error) {
         console.error(error);
 
@@ -58,7 +83,10 @@ async function load(loadConfig) {
         return;
     }
 
-    self.postMessage({ status: "ready", device: webGPUAvailable ? "webgpu" : "auto" });
+    self.postMessage({
+        status: "ready",
+        device: webGPUAvailable ? "webgpu" : "auto",
+    });
 }
 
 async function generate(messages) {
@@ -66,14 +94,16 @@ async function generate(messages) {
 
     console.log({ messages });
 
-    const input = messages[messages.length - 1]
-    const compressionRate = (input.compressionRate / 100).toFixed(5)
+    const input = messages[messages.length - 1];
+    const compressionRate = (input.compressionRate / 100).toFixed(5);
     const inputText = input.content;
     const inputLength = inputText.length;
 
     const start = performance.now();
 
-    const result = await promptCompressor.compress_prompt(inputText, { rate: compressionRate })
+    const result = await promptCompressor.compress_prompt(inputText, {
+        rate: compressionRate,
+    });
 
     const end = performance.now();
     const time = end - start;
@@ -88,8 +118,8 @@ async function generate(messages) {
             inputLength: inputLength,
             compressedLength: compressedLength,
             time: time,
-        }
-    })
+        },
+    });
 
     // Send the output back to the main thread
     self.postMessage({
@@ -98,10 +128,9 @@ async function generate(messages) {
             result: result,
             inputLength: inputLength,
             compressedLength: compressedLength,
-        }
+        },
     });
 }
-
 
 // Listen for messages from the main thread
 self.addEventListener("message", async (e) => {
