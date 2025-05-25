@@ -1,4 +1,4 @@
-# LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
+'# LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
 
 [[English]](README.md)
 
@@ -74,6 +74,8 @@ npm install @atjsh/llmlingua-2
    - 장점: 빠르고, 작은 크기
    - 단점: 정확도가 약간 낮음
    - 공개 모델: **[Arcoldd/llmlingua4j-bert-base-onnx](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx)**
+
+각 모델의 성능에 대해 [더 알아보기](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) (실제 성능은 다를 수 있음).
 
 ## XLM-RoBERTa 사용 예제
 
@@ -157,7 +159,7 @@ const promptCompressor = new LLMLingua2.PromptCompressor(
 
 # API 참조
 
-> 현재는 제공되지 않음. 대신, 타입 정의를 참조하라.
+[더 알아보기](https://llmlingua-2-js-typedoc.vercel.app/)
 
 # 테스팅
 

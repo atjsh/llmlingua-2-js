@@ -159,7 +159,7 @@ const promptCompressor = new LLMLingua2.PromptCompressor(
 
 ## API Reference
 
-> Not available at the moment. Please refer to the type definitions of the `LLMLingua2` object for more details.
+[Learn More](https://llmlingua-2-js-typedoc.vercel.app/)
 
 # Testing
 
