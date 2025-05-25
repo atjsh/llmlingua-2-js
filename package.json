@@ -13,6 +13,7 @@
     "clean": "rimraf dist",
     "build": "tsc",
     "preversion": "rimraf dist && yarn build",
+    "prepublish": "yarn typedoc",
     "typedoc": "npx typedoc"
   },
   "files": [
