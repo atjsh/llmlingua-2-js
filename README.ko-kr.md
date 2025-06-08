@@ -1,6 +1,9 @@
-# LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
+---
+title: README (한국어)
+description: LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
+---
 
-[[English]](README.md)
+# LLMLingua-2의 JavaScript/TypeScript 구현체 (실험)
 
 [![NPM 버전](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![라이센스](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -77,89 +80,9 @@ npm install @atjsh/llmlingua-2
 
 각 모델의 성능에 대해 [더 알아보기](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) (실제 성능은 다를 수 있음).
 
-## XLM-RoBERTa 사용 예제
-
-```typescript
-import { LLMLingua2 } from "@atjsh/llmlingua-2";
-
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
-const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
-const oai_tokenizer = new Tiktoken(o200k_base);
-
-const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(
-  modelName,
-  {
-    device: "auto",
-    dtype: "fp32",
-  },
-  oai_tokenizer,
-  {
-    modelSpecificOptions: {
-      use_external_data_format: true,
-    },
-  }
-);
-
-const compressedText: string = await promptCompressor.compress_prompt(
-  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
-  { rate: 0.8 }
-);
-
-console.log({ compressedText });
-```
-
-## BERT 사용 예제
-
-```typescript
-import { LLMLingua2 } from "@atjsh/llmlingua-2";
-
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
-const modelName = "Arcoldd/llmlingua4j-bert-base-onnx";
-const oai_tokenizer = new Tiktoken(o200k_base);
-
-const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(
-  modelName,
-  {
-    device: "auto",
-    dtype: "fp32",
-  },
-  oai_tokenizer,
-  {
-    modelSpecificOptions: {
-      subfolder: "",
-    },
-  }
-);
-
-const compressedText: string = await promptCompressor.compress_prompt(
-  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
-  { rate: 0.8 }
-);
-
-console.log({ compressedText });
-```
-
-## 커스터마이징
-
-`PromptCompressor`를 직접 인스턴스화할 수 있다. 예를 들어, 다음과 같이 할 수 있다:
-
-```typescript
-const promptCompressor = new LLMLingua2.PromptCompressor(
-  model,
-  tokenizer,
-  get_pure_tokens,
-  is_begin_of_new_word,
-  oai_tokenizer
-);
-```
-
 # API 참조
 
-[더 알아보기](https://llmlingua-2-js-typedoc.vercel.app/)
+[더 알아보기](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html)
 
 # 테스팅
 

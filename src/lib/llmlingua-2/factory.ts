@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: MIT
 
+/**
+ * @categoryDescription Factory
+A collection of utility functions and types for model-specific token handling.
+ *
+ * @showCategories
+ */
+
 import {
   AutoConfig,
   AutoModelForTokenClassification,
@@ -15,6 +22,7 @@ import {
   get_pure_tokens_xlm_roberta_large,
   is_begin_of_new_word_bert_base_multilingual_cased,
   is_begin_of_new_word_xlm_roberta_large,
+  Logger,
 } from "./utils.js";
 
 type PreTrainedTokenizerOptions = Parameters<
@@ -27,6 +35,7 @@ type PretrainedModelOptions = Parameters<
 async function prepareDependencies(
   modelName: string,
   transformerJSConfig: TransformersJSConfig,
+  logger: Logger,
 
   pretrainedConfig?: PretrainedConfig | null,
   pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null,
@@ -34,7 +43,7 @@ async function prepareDependencies(
 ) {
   const config =
     pretrainedConfig ?? (await AutoConfig.from_pretrained(modelName));
-  console.debug({ config });
+  logger({ config });
 
   const tokenizerConfig = {
     config: {
@@ -45,13 +54,13 @@ async function prepareDependencies(
     },
     ...pretrainedTokenizerOptions,
   };
-  console.debug({ tokenizerConfig });
+  logger({ tokenizerConfig });
 
   const tokenizer = await AutoTokenizer.from_pretrained(
     modelName,
     tokenizerConfig
   );
-  console.debug({ tokenizer });
+  logger({ tokenizer });
 
   const modelConfig = {
     config: {
@@ -62,39 +71,137 @@ async function prepareDependencies(
     },
     ...modelSpecificOptions,
   };
-  console.debug({ modelConfig });
+  logger({ modelConfig });
 
   const model = await AutoModelForTokenClassification.from_pretrained(
     modelName,
     modelConfig
   );
-  console.debug({ model });
+  logger({ model });
 
   return { model, tokenizer, config };
 }
 
 /**
+ * Options for the LLMLingua-2 factory functions.
+ *
+ * @category Factory
+ */
+export interface LLMLingua2FactoryOptions {
+  /**
+   * Configuration for Transformers.js.
+   */
+  transformerJSConfig: TransformersJSConfig;
+
+  /**
+   * The tokenizer to use calculating the compression rate.
+   */
+  oaiTokenizer: Tiktoken;
+
+  /**
+   * Optional pretrained configuration.
+   */
+  pretrainedConfig?: PretrainedConfig | null;
+
+  /**
+   * Optional pretrained tokenizer options.
+   */
+  pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null;
+
+  /**
+   * Optional model-specific options.
+   */
+  modelSpecificOptions?: PretrainedModelOptions | null;
+
+  /**
+   * Optional logger function.
+   */
+  logger?: Logger;
+}
+
+/**
+ * Return type for the LLMLingua-2 factory functions. Use `promptCompressor` to compress prompts.
+ *
+ * @category Factory
+ */
+export interface LLMLingua2FactoryReturn {
+  /**
+   * Instance of LLMLingua-2 PromptCompressor.
+   *
+   * @see {@link PromptCompressorLLMLingua2}
+   */
+  promptCompressor: PromptCompressorLLMLingua2;
+
+  /**
+   * The model used for token classification.
+   */
+  model: AutoModelForTokenClassification;
+
+  /**
+   * The tokenizer used for tokenization.
+   */
+  tokenizer: AutoTokenizer;
+
+  /**
+   * The configuration used for the model.
+   */
+  config: AutoConfig;
+}
+
+/**
  * Factory functions to create instances of LLMLingua-2 PromptCompressor
  * with XLM-RoBERTa model.
+ *
+ * @category Factory
+ * 
+ * @example 
+ * ```ts
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
+
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
+
+const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
+const oai_tokenizer = new Tiktoken(o200k_base);
+
+const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName,
+  {
+    transformerJSConfig: {
+      device: "auto",
+      dtype: "fp32",
+    },
+    oaiTokenizer: oai_tokenizer,
+    modelSpecificOptions: {
+      use_external_data_format: true,
+    },
+  }
+);
+
+const compressedText: string = await promptCompressor.compress_prompt(
+  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
+  { rate: 0.8 }
+);
+
+console.log({ compressedText });
+```
  */
 export async function WithXLMRoBERTa(
   modelName: string,
-  transformerJSConfig: TransformersJSConfig,
-  oaiTokenizer: Tiktoken,
-
-  {
+  options: LLMLingua2FactoryOptions
+): Promise<LLMLingua2FactoryReturn> {
+  const {
+    transformerJSConfig,
+    oaiTokenizer,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
-  }: {
-    pretrainedConfig?: PretrainedConfig | null;
-    pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null;
-    modelSpecificOptions?: PretrainedModelOptions | null;
-  }
-) {
+    logger = console.log,
+  } = options;
+
   const { model, tokenizer, config } = await prepareDependencies(
     modelName,
     transformerJSConfig,
+    logger,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions
@@ -108,7 +215,7 @@ export async function WithXLMRoBERTa(
     oaiTokenizer
   );
 
-  console.debug({ promptCompressor });
+  logger({ promptCompressor });
 
   return {
     promptCompressor,
@@ -121,25 +228,57 @@ export async function WithXLMRoBERTa(
 /**
  * Factory functions to create instances of LLMLingua-2 PromptCompressor
  * with BERT Multilingual model.
+ *
+ * @category Factory
+ * 
+ * @example 
+ * ```ts
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
+
+import { Tiktoken } from "js-tiktoken/lite";
+import o200k_base from "js-tiktoken/ranks/o200k_base";
+
+const modelName = "Arcoldd/llmlingua4j-bert-base-onnx";
+const oai_tokenizer = new Tiktoken(o200k_base);
+
+const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(modelName,
+  {
+    transformerJSConfig: {
+      device: "auto",
+      dtype: "fp32",
+    },
+    oaiTokenizer: oai_tokenizer,
+    modelSpecificOptions: {
+      subfolder: "",
+    },
+  }
+);
+
+const compressedText: string = await promptCompressor.compress_prompt(
+  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
+  { rate: 0.8 }
+);
+
+console.log({ compressedText });
+```
  */
 export async function WithBERTMultilingual(
   modelName: string,
-  modelOptions: TransformersJSConfig,
-  oaiTokenizer: Tiktoken,
-
-  {
+  options: LLMLingua2FactoryOptions
+): Promise<LLMLingua2FactoryReturn> {
+  const {
+    transformerJSConfig,
+    oaiTokenizer,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
-  }: {
-    pretrainedConfig?: PretrainedConfig | null;
-    pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null;
-    modelSpecificOptions?: PretrainedModelOptions | null;
-  }
-) {
+    logger = console.log,
+  } = options;
+
   const { model, tokenizer, config } = await prepareDependencies(
     modelName,
-    modelOptions,
+    transformerJSConfig,
+    logger,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions
@@ -153,7 +292,7 @@ export async function WithBERTMultilingual(
     oaiTokenizer
   );
 
-  console.debug({ promptCompressor });
+  logger({ promptCompressor });
 
   return {
     promptCompressor,

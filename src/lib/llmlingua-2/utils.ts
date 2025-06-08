@@ -1,16 +1,35 @@
 // SPDX-License-Identifier: MIT
 
+/**
+ * @categoryDescription Adaptors
+ * A collection of utility functions and types for model-specific token handling.
+ *
+ * @categoryDescription Utils
+ * A collection of utility functions.
+ */
+
+/**
+ * Type definition for a logger function.
+ *
+ * @category Utils
+ */
+export type Logger = (...message: unknown[]) => void;
+
 // Equivalent to Python's string.punctuation
 const PUNCTUATION: string = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
 /**
  * Implementation on `get_pure_token` function of original LLMLingua implementation.
- * @see https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L108
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L108)
+ *
+ * @category Adaptors
  */
 export type GetPureTokenFunction = (token: string | null | undefined) => string;
 
 /**
  * Implementation of `GetPureTokenFunction` for "XLM-RoBERTa Large" model.
+ *
+ * @category Adaptors
  */
 export const get_pure_tokens_xlm_roberta_large: GetPureTokenFunction = (
   token
@@ -20,6 +39,8 @@ export const get_pure_tokens_xlm_roberta_large: GetPureTokenFunction = (
 
 /**
  * Implementation of `GetPureTokenFunction` for "BERT Base Multilingual Cased" model.
+ *
+ * @category Adaptors
  */
 export const get_pure_tokens_bert_base_multilingual_cased: GetPureTokenFunction =
   (token) => {
@@ -28,7 +49,9 @@ export const get_pure_tokens_bert_base_multilingual_cased: GetPureTokenFunction 
 
 /**
  * Implementation on `is_begin_of_new_word` function of original LLMLingua implementation.
- * @see https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L81
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L81)
+ *
+ * @category Adaptors
  */
 export type IsBeginOfNewWordFunction = (
   token: string | null | undefined,
@@ -38,6 +61,8 @@ export type IsBeginOfNewWordFunction = (
 
 /**
  * Implementation of `IsBeginOfNewWordFunction` for "XLM-RoBERTa Large" model.
+ *
+ * @category Adaptors
  */
 export const is_begin_of_new_word_xlm_roberta_large: IsBeginOfNewWordFunction =
   (token, force_tokens = [], token_map = {}) => {
@@ -54,6 +79,8 @@ export const is_begin_of_new_word_xlm_roberta_large: IsBeginOfNewWordFunction =
 
 /**
  * Implementation of `IsBeginOfNewWordFunction` for "BERT Base Multilingual Cased" model.
+ *
+ * @category Adaptors
  */
 export const is_begin_of_new_word_bert_base_multilingual_cased: IsBeginOfNewWordFunction =
   (token, force_tokens = [], token_map = {}) => {
@@ -68,7 +95,9 @@ export const is_begin_of_new_word_bert_base_multilingual_cased: IsBeginOfNewWord
 
 /**
  * Implementation on `replace_added_token` function of original LLMLingua implementation.
- * @see https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L102
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L102)
+ *
+ * @category Utils
  */
 export function replace_added_token(
   token: string,
@@ -108,6 +137,8 @@ export function replace_added_token(
  * percentile(data, 25); // → 15   (1st quartile)
  * percentile(data, 50); // → 37.5 (median with interpolation)
  * percentile(data, 90); // → 40.5
+ *
+ * @category Utils
  */
 export function percentile(arr: number[], p: number): number {
   if (arr.length === 0) return 0;

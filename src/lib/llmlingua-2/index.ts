@@ -13,4 +13,9 @@ export {
   is_begin_of_new_word_xlm_roberta_large,
   IsBeginOfNewWordFunction,
 } from "./utils.js";
-export { WithXLMRoBERTa, WithBERTMultilingual } from "./factory.js";
+export {
+  WithXLMRoBERTa,
+  WithBERTMultilingual,
+  LLMLingua2FactoryOptions as FactoryOptions,
+  LLMLingua2FactoryReturn as FactoryReturn,
+} from "./factory.js";

@@ -1,6 +1,9 @@
-# JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
+---
+title: README (English)
+description: JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
+---
 
-[[한국어]](README.ko-kr.md)
+# JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
 
 [![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -77,89 +80,9 @@ To get started, you can choose between models based on your needs.
 
 [Learn More](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) about the performance of each model. (Actual performance may vary.)
 
-## With XLM-RoBERTa (The Large Model)
-
-```typescript
-import { LLMLingua2 } from "@atjsh/llmlingua-2";
-
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
-const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
-const oai_tokenizer = new Tiktoken(o200k_base);
-
-const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(
-  modelName,
-  {
-    device: "auto",
-    dtype: "fp32",
-  },
-  oai_tokenizer,
-  {
-    modelSpecificOptions: {
-      use_external_data_format: true,
-    },
-  }
-);
-
-const compressedText: string = await promptCompressor.compress_prompt(
-  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
-  { rate: 0.8 }
-);
-
-console.log({ compressedText });
-```
-
-## With BERT (The Small Model)
-
-```typescript
-import { LLMLingua2 } from "@atjsh/llmlingua-2";
-
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
-const modelName = "Arcoldd/llmlingua4j-bert-base-onnx";
-const oai_tokenizer = new Tiktoken(o200k_base);
-
-const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(
-  modelName,
-  {
-    device: "auto",
-    dtype: "fp32",
-  },
-  oai_tokenizer,
-  {
-    modelSpecificOptions: {
-      subfolder: "",
-    },
-  }
-);
-
-const compressedText: string = await promptCompressor.compress_prompt(
-  "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance.",
-  { rate: 0.8 }
-);
-
-console.log({ compressedText });
-```
-
-## Customization
-
-You can instantiate the `PromptCompressor` by yourself.
-
-```typescript
-const promptCompressor = new LLMLingua2.PromptCompressor(
-  model,
-  tokenizer,
-  get_pure_tokens,
-  is_begin_of_new_word,
-  oai_tokenizer
-);
-```
-
 ## API Reference
 
-[Learn More](https://llmlingua-2-js-typedoc.vercel.app/)
+[Learn More](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html)
 
 # Testing
 

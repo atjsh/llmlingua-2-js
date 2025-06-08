@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: MIT
 
+/**
+ * @categoryDescription Core
+ * Class & functions for customized use of prompt compression
+ */
+
 import {
   PreTrainedModel,
   PreTrainedTokenizer,
@@ -13,12 +18,15 @@ import { Tiktoken } from "js-tiktoken/lite";
 import {
   GetPureTokenFunction,
   IsBeginOfNewWordFunction,
+  Logger,
   percentile,
   replace_added_token,
 } from "./utils.js";
 
 /**
  * Options for compressing prompts.
+ *
+ * @category Core
  */
 export interface CompressPromptOptions {
   /**
@@ -78,11 +86,15 @@ export interface CompressPromptOptions {
 
 /**
  * Options for compressing prompts.
+ *
+ * @category Core
  */
 export interface CompressPromptOptionsSnakeCase {
   /**
    * Float value between 0 and 1 indicating the rate of compression.
    * 0.1 means 10% of the original tokens will be kept
+   *
+   * @group Events
    */
   rate: number;
 
@@ -135,7 +147,7 @@ export interface CompressPromptOptionsSnakeCase {
   chunk_end_tokens?: string[];
 }
 
-export interface CompressSingleContextOptions {
+interface CompressSingleContextOptions {
   context: string;
   rate: number;
   target_token: number;
@@ -146,22 +158,71 @@ export interface CompressSingleContextOptions {
   chunk_end_tokens: string[];
 }
 
+/**
+ * The TypeScript implementation on original `PromptCompressor`, which is a class for compressing prompts using a language model.
+ *
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/prompt_compressor.py)
+ * @category Core
+ */
 export class PromptCompressorLLMLingua2 {
   private addedTokens: string[] = [];
   private specialTokens: Set<string>;
 
   constructor(
+    /**
+     * The pre-trained model to use for compression.
+     */
     private readonly model: PreTrainedModel,
+
+    /**
+     * The pre-trained tokenizer to use for compression.
+     */
     private readonly tokenizer: PreTrainedTokenizer,
+
+    /**
+     * Function to get the pure token from a token.
+     * This is used to normalize tokens before processing.
+     */
     private readonly getPureToken: GetPureTokenFunction,
+
+    /**
+     * Function to check if a token is the beginning of a new word.
+     * This is used to determine how to merge tokens into words.
+     */
     private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
+
+    /**
+     * The tokenizer to use calculating the compression rate.
+     */
     private readonly oaiTokenizer: Tiktoken,
+
+    /**
+     * Configuration for LLMLingua2.
+     */
     private readonly llmlingua2Config = {
+      /**
+       * Maximum batch size for processing prompts.
+       * This is used to limit the number of prompts processed in a single batch.
+       */
       max_batch_size: 50,
+
+      /**
+       * Maximum number of tokens to force in the compression.
+       * This is used to ensure that certain tokens are always included in the compressed prompt.
+       */
       max_force_token: 100,
+
+      /**
+       * Maximum sequence length for the model.
+       * This is used to limit the length of the input sequences to the model.
+       */
       max_seq_length: 512,
     },
-    private readonly logger: (...message: unknown[]) => void = console.log
+
+    /**
+     * Logger function to log messages.
+     */
+    private readonly logger: Logger = console.log
   ) {
     for (let i = 0; i < this.llmlingua2Config.max_force_token; i++) {
       this.addedTokens.push(`[NEW${i}]`);

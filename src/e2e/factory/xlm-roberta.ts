@@ -9,19 +9,16 @@ import { EXAMPLES } from "../long-texts.js";
 const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
 const oai_tokenizer = new Tiktoken(o200k_base);
 
-const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(
-  modelName,
-  {
+const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName, {
+  transformerJSConfig: {
     device: "auto",
     dtype: "fp32",
   },
-  oai_tokenizer,
-  {
-    modelSpecificOptions: {
-      use_external_data_format: true,
-    },
-  }
-);
+  oaiTokenizer: oai_tokenizer,
+  modelSpecificOptions: {
+    use_external_data_format: true,
+  },
+});
 
 const start = performance.now();
 

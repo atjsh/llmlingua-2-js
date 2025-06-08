@@ -6,5 +6,10 @@
     "GitHub": "https://github.com/atjsh/llmlingua-2-js",
     "Documentation": "https://llmlingua-2-js-typedoc.vercel.app",
     "Demo": "https://atjsh.github.io/llmlingua-2-js"
-  }
+  },
+  "navigation": {
+    "includeCategories": true,
+    "compactFolders": true
+  },
+  "categoryOrder": ["Factory", "Core", "Adaptors"]
 }
