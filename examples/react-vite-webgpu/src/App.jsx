@@ -12,22 +12,22 @@ const STICKY_SCROLL_THRESHOLD = 120;
 const AVAILABLE_MODELS = {
   tinybert: {
     name: "atjsh/llmlingua-2-js-tinybert-meetingbank",
-    description: "XS Size (Experimental)",
+    description: "60MB (Experimental, English Only Recommended)",
     dtypes: ["fp32"],
   },
   mobilebert: {
     name: "atjsh/llmlingua-2-js-mobilebert-meetingbank",
-    description: "Small Size (Experimental)",
+    description: "100MB (Experimental, English Only Recommended)",
     dtypes: ["fp32"],
   },
   bert: {
     name: "Arcoldd/llmlingua4j-bert-base-onnx",
-    description: "Medium Size",
+    description: "700MB",
     dtypes: ["fp32"],
   },
   roberta: {
     name: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
-    description: "Large Size",
+    description: "500MB ~ 1GB",
     dtypes: ["int8", "q8", "uint8", "q4", "bnb4"],
   },
 };
@@ -324,10 +324,6 @@ function App() {
               >
                 Click to Start
               </button>
-            </div>
-            <div className="text-sm text-center text-gray-500 dark:text-gray-300">
-              when you click Start, <br />
-              <b>0.5GB ~ 1GB</b> of model files will be loaded.
             </div>
           </div>
         </div>
