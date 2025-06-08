@@ -1,8 +1,3 @@
----
-title: README (English)
-description: JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
----
-
 # JavaScript/TypeScript Implementation of LLMLingua-2 (Experimental)
 
 [![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
