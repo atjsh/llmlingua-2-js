@@ -9,7 +9,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@atjsh/llmlingua-2@workspace:."
   dependencies:
-    "@huggingface/transformers": "npm:^3.5.1"
+    "@huggingface/transformers": "npm:^3.5.2"
     "@tensorflow/tfjs": "npm:^4.22.0"
     "@types/node": "npm:^22.15.18"
     es-toolkit: "npm:^1.38.0"
@@ -53,15 +53,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/transformers@npm:^3.5.1":
-  version: 3.5.1
-  resolution: "@huggingface/transformers@npm:3.5.1"
+"@huggingface/transformers@npm:^3.5.2":
+  version: 3.5.2
+  resolution: "@huggingface/transformers@npm:3.5.2"
   dependencies:
     "@huggingface/jinja": "npm:^0.4.1"
     onnxruntime-node: "npm:1.21.0"
     onnxruntime-web: "npm:1.22.0-dev.20250409-89f8206ba4"
     sharp: "npm:^0.34.1"
-  checksum: 10c0/fb4de883e781ed3ba20858ff0461e3f9c3081380601dc3207ab09c561b05213256cc2ec74f9a5e49bcfa7725b9218b7b6e19a7a92f69d20d606ff78f6a6ce7b0
+  checksum: 10c0/ebd12c373b15ed73f488b751e1e67accbe3a58472b90b76761812f994fe6154220ef2f92d4c479a2dc897518b7beae562c20d8e36faa958a0873f8729ceb751c
   languageName: node
   linkType: hard
 

@@ -27,7 +27,7 @@
     "es-toolkit": "^1.38.0"
   },
   "devDependencies": {
-    "@huggingface/transformers": "^3.5.1",
+    "@huggingface/transformers": "^3.5.2",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/node": "^22.15.18",
     "js-tiktoken": "^1.0.20",
