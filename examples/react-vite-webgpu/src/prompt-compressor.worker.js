@@ -1,6 +1,7 @@
 import {
   AutoConfig,
   AutoTokenizer,
+  BertForTokenClassification,
   InterruptableStoppingCriteria,
   MobileBertPreTrainedModel,
   TokenClassifierOutput,
@@ -83,6 +84,40 @@ async function load(loadConfig) {
           oaiTokenizer: oai_tokenizer,
         })
       ).promptCompressor;
+    } else if (modelKind === "tinybert") {
+      const transformerJSConfig = {
+        device: webGPUAvailable ? "webgpu" : "auto",
+        dtype: dtype,
+      };
+
+      const config = await AutoConfig.from_pretrained(modelName);
+      const tokenizer = await AutoTokenizer.from_pretrained(modelName, {
+        config: {
+          ...config,
+          "transformers.js_config": transformerJSConfig,
+        },
+      });
+      const model = await BertForTokenClassification.from_pretrained(
+        modelName,
+        {
+          config: {
+            ...config,
+            "transformers.js_config": transformerJSConfig,
+          },
+        }
+      );
+      promptCompressor = new LLMLingua2.PromptCompressor(
+        model,
+        tokenizer,
+        LLMLingua2.get_pure_tokens_bert_base_multilingual_cased,
+        LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased,
+        oai_tokenizer,
+        {
+          max_batch_size: 50,
+          max_force_token: 100,
+          max_seq_length: 312,
+        }
+      );
     } else if (modelKind === "mobilebert") {
       const transformerJSConfig = {
         device: webGPUAvailable ? "webgpu" : "auto",
@@ -110,7 +145,12 @@ async function load(loadConfig) {
         tokenizer,
         LLMLingua2.get_pure_tokens_bert_base_multilingual_cased,
         LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased,
-        oai_tokenizer
+        oai_tokenizer,
+        {
+          max_batch_size: 50,
+          max_force_token: 100,
+          max_seq_length: 128,
+        }
       );
     } else {
       promptCompressor = (
