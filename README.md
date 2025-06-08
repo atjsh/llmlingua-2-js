@@ -3,38 +3,30 @@
 [![NPM Version](https://img.shields.io/npm/v/%40atjsh%2Fllmlingua-2)](https://www.npmjs.com/package/@atjsh/llmlingua-2)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Run [LLMLingua-2](https://github.com/microsoft/LLMLingua) in your web browser or Node.js.
+**LLMLingua-2**, Originally developed and implemented in Python by [Microsoft](https://github.com/microsoft/LLMLingua), is a small-size yet powerful prompt compression method.
 
-## What is LLMLingua-2?
+- **Efficient**: Compresses context prompts with BERT sized models.
+- **Accurate**: Achieves high accuracy then other methods while requiring less computational resources.
 
-LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance. [^llmlingua-2]
+**llmlingua-2-js**, ported by [atjsh](https://github.com/atjsh), is a pure JavaScript/TypeScript implementation of LLMLingua-2, designed to run in web browsers and Node.js environments.
 
-[^llmlingua-2]: [LLMLingua-2: Data Distillation for Efficient and Faithful Task-Agnostic Prompt Compression](https://aclanthology.org/2024.findings-acl.57/)
+- **Performance**: Everything can be done in the browser. If your environment supports WebGPU, you can use it. Server-side processing is not required by default.
+- **Correctness**: The original logic will be ported to TypeScript as accurately as possible.
 
-## Status
+# Try Demo Online (No Installation Required)
 
-**This library is under active development and the API is subject to change.**
+[You can try it on the GitHub Pages](https://atjsh.github.io/llmlingua-2-js) without any installation.
 
-# Demo
-
-## Try Now (No Installation Required)
-
-You can test the library [here](https://atjsh.github.io/llmlingua-2-js). WebGPU-enabled browsers are required (Google Chrome is sufficient).
-
-## Source Code
-
-The demo is available in the `examples` directory. You can run it using the following command:
+The source code for demo is available in the `examples` directory. You can run it locally using the following command:
 
 ```sh
 cd examples/react-vite-webgpu
 npm install
 ```
 
-[Learn More](/examples/react-vite-webgpu/README.md)
+[Learn More: Demo source code](/examples/react-vite-webgpu/README.md)
 
-# Installation
-
-## Prerequisites
+# Getting Started
 
 This implementation depends on the following libraries:
 
@@ -44,7 +36,9 @@ This implementation depends on the following libraries:
 
 Especially, the `@huggingface/transformers` library utilizes various computational optimizations to achieve high performance. Please consult if the running environment supports the minimum requirements from these libraries.
 
-## NPM
+## Installation
+
+You can use the library by downloading the library from [npm](https://www.npmjs.com/package/@atjsh/llmlingua-2) and importing it into your JavaScript/TypeScript project.
 
 First, install the dependencies:
 
@@ -58,11 +52,9 @@ Then, install the library:
 npm install @atjsh/llmlingua-2
 ```
 
-# Usage
-
 ## Model Selection
 
-To get started, you can choose between models based on your needs.
+You can choose between models based on your needs.
 
 1. **XLM-RoBERTa**
    - Pros: High accuracy
@@ -73,19 +65,17 @@ To get started, you can choose between models based on your needs.
    - Cons: Lower accuracy compared to XLM-RoBERTa
    - Public Model: **[Arcoldd/llmlingua4j-bert-base-onnx](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx)**
 
-[Learn More](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) about the performance of each model. (Actual performance may vary.)
+[Learn More](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) about the performance of each model (actual performance may vary).
 
-## API Reference
+The model files will be downloaded automatically by default.
 
-[Learn More](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html)
+## [API Reference](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html)
+
+For more details on how to use the library, please refer to the [API reference documentation](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html).
 
 # Testing
 
-## Unit Tests
-
-> Not available at the moment.
-
-## E2E Tests
+> Unit tests are not available at the moment.
 
 E2E tests are partially available in following directories:
 
