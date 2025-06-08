@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 import {
-  BertForTokenClassification,
+  PreTrainedModel,
   PreTrainedTokenizer,
   Tensor,
   TokenClassifierOutput,
-  XLMRobertaForTokenClassification,
 } from "@huggingface/transformers";
 import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { chunk } from "es-toolkit/array";
@@ -18,14 +17,141 @@ import {
   replace_added_token,
 } from "./utils.js";
 
+/**
+ * Options for compressing prompts.
+ */
+export interface CompressPromptOptions {
+  /**
+   * Float value between 0 and 1 indicating the rate of compression.
+   * 0.1 means 10% of the original tokens will be kept
+   */
+  rate: number;
+
+  /**
+   * Target number of tokens to keep after compression.
+   * If set, this will override the `rate` option.
+   *
+   * @defaultValue `-1` (no target)
+   */
+  targetToken?: number;
+
+  /**
+   * How to convert token probabilities to word probabilities.
+   * "mean" will average the probabilities of tokens in a word,
+   * "first" will take the probability of the first token in a word.
+   *
+   * @defaultValue `"mean"`
+   */
+  tokenToWord?: "mean" | "first";
+
+  /**
+   * List of tokens that must be kept in the compressed prompt.
+   * These tokens will not be removed regardless of their probability.
+   *
+   * @defaultValue `[]`
+   */
+  forceTokens?: string[];
+
+  /**
+   * If true, reserve a digit for forced tokens.
+   *
+   * @defaultValue `false`
+   */
+  forceReserveDigit?: boolean;
+
+  /**
+   * If true, drop consecutive tokens that are forced.
+   * This is useful to avoid keeping too many forced tokens in a row.
+   *
+   * @alpha
+   * @defaultValue `false`
+   */
+  dropConsecutive?: boolean;
+
+  /**
+   * List of tokens that indicate the end of a chunk.
+   * The context will be split into chunks at these tokens.
+   * @defaultValue `[".", "\n"]`
+   */
+  chunkEndTokens?: string[];
+}
+
+/**
+ * Options for compressing prompts.
+ */
+export interface CompressPromptOptionsSnakeCase {
+  /**
+   * Float value between 0 and 1 indicating the rate of compression.
+   * 0.1 means 10% of the original tokens will be kept
+   */
+  rate: number;
+
+  /**
+   * Target number of tokens to keep after compression.
+   * If set, this will override the `rate` option.
+   *
+   * @defaultValue `-1` (no target)
+   */
+  target_token?: number;
+
+  /**
+   * How to convert token probabilities to word probabilities.
+   * "mean" will average the probabilities of tokens in a word,
+   * "first" will take the probability of the first token in a word.
+   *
+   * @defaultValue `"mean"`
+   */
+  token_to_Word?: "mean" | "first";
+
+  /**
+   * List of tokens that must be kept in the compressed prompt.
+   * These tokens will not be removed regardless of their probability.
+   *
+   * @defaultValue `[]`
+   */
+  force_tokens?: string[];
+
+  /**
+   * If true, reserve a digit for forced tokens.
+   *
+   * @defaultValue `false`
+   */
+  force_reserve_digit?: boolean;
+
+  /**
+   * If true, drop consecutive tokens that are forced.
+   * This is useful to avoid keeping too many forced tokens in a row.
+   *
+   * @alpha
+   * @defaultValue `false`
+   */
+  drop_consecutive?: boolean;
+
+  /**
+   * List of tokens that indicate the end of a chunk.
+   * The context will be split into chunks at these tokens.
+   * @defaultValue `[".", "\n"]`
+   */
+  chunk_end_tokens?: string[];
+}
+
+export interface CompressSingleContextOptions {
+  context: string;
+  rate: number;
+  target_token: number;
+  token_to_word: "mean" | "first";
+  force_tokens: string[];
+  force_reserve_digit: boolean;
+  drop_consecutive: boolean;
+  chunk_end_tokens: string[];
+}
+
 export class PromptCompressorLLMLingua2 {
   private addedTokens: string[] = [];
   private specialTokens: Set<string>;
 
   constructor(
-    private readonly model:
-      | XLMRobertaForTokenClassification
-      | BertForTokenClassification,
+    private readonly model: PreTrainedModel,
     private readonly tokenizer: PreTrainedTokenizer,
     private readonly getPureToken: GetPureTokenFunction,
     private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
@@ -34,7 +160,8 @@ export class PromptCompressorLLMLingua2 {
       max_batch_size: 50,
       max_force_token: 100,
       max_seq_length: 512,
-    }
+    },
+    private readonly logger: (...message: unknown[]) => void = console.log
   ) {
     for (let i = 0; i < this.llmlingua2Config.max_force_token; i++) {
       this.addedTokens.push(`[NEW${i}]`);
@@ -51,26 +178,65 @@ export class PromptCompressorLLMLingua2 {
     }
   }
 
-  public async compress_prompt(
+  /**
+   * Compresses a prompt based on the given options.
+   */
+  public async compress(
     context: string,
     {
       rate,
-      target_token = -1,
-      token_to_word = "mean",
-      force_tokens = [],
-      force_reserve_digit = false,
-      drop_consecutive = false,
-      chunk_end_tokens = [".", "\n"],
-    }: {
-      rate: number;
-      target_token?: number;
-      token_to_word?: "mean" | "first";
-      force_tokens?: string[];
-      force_reserve_digit?: boolean;
-      drop_consecutive?: boolean;
-      chunk_end_tokens?: string[];
-    }
+      targetToken = -1,
+      tokenToWord = "mean",
+      forceTokens = [],
+      forceReserveDigit = false,
+      dropConsecutive = false,
+      chunkEndTokens = [".", "\n"],
+    }: CompressPromptOptions
+  ): Promise<string> {
+    return this.compressSingleContext({
+      context,
+      rate,
+      target_token: targetToken,
+      token_to_word: tokenToWord,
+      force_tokens: forceTokens,
+      force_reserve_digit: forceReserveDigit,
+      drop_consecutive: dropConsecutive,
+      chunk_end_tokens: chunkEndTokens,
+    });
+  }
+
+  /**
+   * Compresses a prompt based on the given options. Alias for `compress`, but uses snake_case for options.
+   *
+   * @alias compress
+   */
+  public async compress_prompt(
+    context: string,
+    options: CompressPromptOptionsSnakeCase
   ) {
+    return this.compress(context, {
+      rate: options.rate,
+      targetToken: options.target_token,
+      tokenToWord: options.token_to_Word,
+      forceTokens: options.force_tokens,
+      forceReserveDigit: options.force_reserve_digit,
+      dropConsecutive: options.drop_consecutive,
+      chunkEndTokens: options.chunk_end_tokens,
+    });
+  }
+
+  private async compressSingleContext(options: CompressSingleContextOptions) {
+    let { context } = options;
+    const {
+      rate,
+      target_token,
+      token_to_word,
+      force_tokens,
+      force_reserve_digit,
+      drop_consecutive,
+      chunk_end_tokens,
+    } = options;
+
     let token_map: Record<string, string> = {};
 
     for (let i = 0; i < force_tokens.length; i++) {
@@ -90,7 +256,7 @@ export class PromptCompressorLLMLingua2 {
 
     const n_original_token = this.getTokenLength(context);
 
-    console.log(
+    this.logger(
       "original token length: appx. ",
       n_original_token.toLocaleString()
     );
@@ -101,7 +267,7 @@ export class PromptCompressorLLMLingua2 {
 
     const chunkedContexts = this.chunkContext(context, chunkEndTokenSet);
 
-    console.log(
+    this.logger(
       "chunking finished. chunk count: ",
       chunkedContexts.length.toLocaleString()
     );
@@ -116,16 +282,19 @@ export class PromptCompressorLLMLingua2 {
       final_reduce_rate = 1.0 - rate_to_keep_for_token_level;
     }
 
-    const compressed_context_strs = await this.compress(chunkedContexts, {
-      reduce_rate: Math.max(0, final_reduce_rate),
-      token_to_word,
-      force_tokens,
-      token_map,
-      force_reserve_digit,
-      drop_consecutive,
-    });
+    const compressed_context_strs = await this.compressContexts(
+      chunkedContexts,
+      {
+        reduce_rate: Math.max(0, final_reduce_rate),
+        token_to_word,
+        force_tokens,
+        token_map,
+        force_reserve_digit,
+        drop_consecutive,
+      }
+    );
 
-    console.log("compression finished");
+    this.logger("compression finished");
 
     const final_compressed_context = compressed_context_strs.join("\n");
     return final_compressed_context;
@@ -258,7 +427,7 @@ export class PromptCompressorLLMLingua2 {
     throw new Error(`Unknown convertMode: ${convertMode}`);
   }
 
-  private async compress(
+  private async compressContexts(
     contexts: string[],
     options: {
       reduce_rate: number;
@@ -297,7 +466,7 @@ export class PromptCompressorLLMLingua2 {
         truncation: true,
       });
 
-      console.log("input tokenization finished");
+      this.logger("input tokenization finished");
 
       const input_ids_dims = input_ids.dims;
 
@@ -306,11 +475,11 @@ export class PromptCompressorLLMLingua2 {
         attention_mask,
       });
 
-      console.log("model inference finished");
+      this.logger("model inference finished");
 
       const [batch_size, seq_len, num_classes] = outputs.logits.dims;
 
-      console.log("logits shape:", outputs.logits.dims);
+      this.logger("logits shape:", outputs.logits.dims);
 
       const logits = tensor3d(
         outputs.logits.data,
@@ -318,7 +487,7 @@ export class PromptCompressorLLMLingua2 {
         "float32"
       );
 
-      console.log("logits tensor created with shape:", logits.shape);
+      this.logger("logits tensor created with shape:", logits.shape);
 
       const probs = softmax(logits, -1);
 
