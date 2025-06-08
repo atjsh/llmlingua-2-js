@@ -10,14 +10,24 @@ import RetryIcon from "./components/icons/RetryIcon";
 const STICKY_SCROLL_THRESHOLD = 120;
 
 const AVAILABLE_MODELS = {
+  tinybert: {
+    name: "atjsh/llmlingua-2-js-tinybert-meetingbank",
+    description: "XS Size (Experimental)",
+    dtypes: ["fp32"],
+  },
+  mobilebert: {
+    name: "atjsh/llmlingua-2-js-mobilebert-meetingbank",
+    description: "Small Size (Experimental)",
+    dtypes: ["fp32"],
+  },
   bert: {
     name: "Arcoldd/llmlingua4j-bert-base-onnx",
-    description: "Smaller model",
+    description: "Medium Size",
     dtypes: ["fp32"],
   },
   roberta: {
     name: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
-    description: "Larger model",
+    description: "Large Size",
     dtypes: ["int8", "q8", "uint8", "q4", "bnb4"],
   },
 };
