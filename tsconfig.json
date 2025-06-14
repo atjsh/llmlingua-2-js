@@ -17,5 +17,6 @@
     "declarationMap": true,
     "declaration": true,
     "noImplicitAny": false
-  }
+  },
+  "exclude": ["node_modules", "dist", "examples", "docs"]
 }

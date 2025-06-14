@@ -1,6 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["./src/index.ts"],
+  "entryPointStrategy": "expand",
+  "excludePrivate": true,
   "out": "docs",
   "navigationLinks": {
     "GitHub": "https://github.com/atjsh/llmlingua-2-js",
