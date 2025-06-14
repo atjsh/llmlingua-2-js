@@ -24,10 +24,10 @@ cd examples/react-vite-webgpu
 
 ### 3. Install Dependencies
 
-Install the necessary dependencies using npm:
+Install the necessary dependencies using yarn:
 
 ```sh
-npm i
+yarn
 ```
 
 ### 4. Run the Development Server
@@ -35,11 +35,7 @@ npm i
 Start the development server:
 
 ```sh
-npm run dev
+yarn run dev
 ```
 
 The application should now be running locally. Open your browser and go to `http://localhost:5173` to see it in action.
-
-# Credits
-
-This React app is a fork of [huggingface/transformers.js-examples](https://github.com/huggingface/transformers.js-examples/blob/main/LICENSE)([/llama-3.2-webgpu](https://github.com/huggingface/transformers.js-examples/tree/2720e7daedb9304756105d1c7eb30dd14830fd15/llama-3.2-webgpu)), originally created by xenova and other contributors.
