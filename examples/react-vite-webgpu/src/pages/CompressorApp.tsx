@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function CompressorApp() {
   const [compressionTarget, setCompressionTarget] = useState(
-    "This is a sample text to be compressed."
+    "LLMLingua-2, a small-size yet powerful prompt compression method trained via data distillation from GPT-4 for token classification with a BERT-level encoder, excels in task-agnostic compression. It surpasses LLMLingua in handling out-of-domain data, offering 3x-6x faster performance."
   );
   const [compressedText, setCompressedText] = useState("");
 
