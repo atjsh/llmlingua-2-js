@@ -21,7 +21,7 @@ The source code for demo is available in the `examples` directory. You can run i
 
 ```sh
 cd examples/react-vite-webgpu
-npm install
+yarn install
 ```
 
 [Learn More: Demo source code](/examples/react-vite-webgpu/README.md)
