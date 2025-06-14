@@ -7,7 +7,7 @@ import {
   AutoConfig,
   AutoTokenizer,
   BertForTokenClassification,
-  PreTrainedModel
+  PreTrainedModel,
 } from "@huggingface/transformers";
 import { Tiktoken } from "js-tiktoken/lite";
 import o200k_base from "js-tiktoken/ranks/o200k_base";
@@ -20,7 +20,7 @@ export const LLMLingua2CompressorModelName = {
   TINYBERT: "TINYBERT",
   MOBILEBERT: "MOBILEBERT",
   BERT: "BERT",
-  ROBERTA: "ROBERTA"
+  ROBERTA: "ROBERTA",
 } as const;
 export type LLMLingua2CompressorModelName =
   keyof typeof LLMLingua2CompressorModelName;
@@ -39,8 +39,8 @@ export const LLMLingua2CompressorModels = {
     tokenUtils: {
       getPureTokens: LLMLingua2.get_pure_tokens_bert_base_multilingual_cased,
       isBeginOfNewWord:
-        LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased
-    }
+        LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased,
+    },
   },
   MOBILEBERT: {
     key: "MOBILEBERT",
@@ -55,8 +55,8 @@ export const LLMLingua2CompressorModels = {
     tokenUtils: {
       getPureTokens: LLMLingua2.get_pure_tokens_bert_base_multilingual_cased,
       isBeginOfNewWord:
-        LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased
-    }
+        LLMLingua2.is_begin_of_new_word_bert_base_multilingual_cased,
+    },
   },
   BERT: {
     key: "BERT",
@@ -68,24 +68,24 @@ export const LLMLingua2CompressorModels = {
     maxSequenceLength: 512,
 
     pretrainedModelOptions: {
-      subfolder: ""
+      subfolder: "",
     },
-    factory: LLMLingua2.WithBERTMultilingual
+    factory: LLMLingua2.WithBERTMultilingual,
   },
   ROBERTA: {
     key: "ROBERTA",
     modelName: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
     defaultDevice: "gpu",
-    defaultModelDataType: "fp32",
+    defaultModelDataType: "int8",
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
 
     pretrainedModelOptions: {
-      use_external_data_format: true
+      use_external_data_format: true,
     },
-    factory: LLMLingua2.WithXLMRoBERTa
-  }
+    factory: LLMLingua2.WithXLMRoBERTa,
+  },
 } as const satisfies Record<string, LLMLingua2ModelConfig>;
 
 export interface LLMLingua2ModelConfig {
@@ -154,14 +154,14 @@ async function LLMLingua2CompressorFactory(options: {
       : providedTransformersJSConfig.device;
   const transformersJSConfig: TransformersJSConfig = {
     device,
-    dtype: providedTransformersJSConfig.modelDataType
+    dtype: providedTransformersJSConfig.modelDataType,
   };
 
   if (model.factory) {
     const { promptCompressor } = await model.factory(model.modelName, {
       transformerJSConfig: transformersJSConfig,
       oaiTokenizer,
-      modelSpecificOptions: model.pretrainedModelOptions
+      modelSpecificOptions: model.pretrainedModelOptions,
     });
 
     return promptCompressor;
@@ -176,8 +176,8 @@ async function LLMLingua2CompressorFactory(options: {
     const tokenizer = await AutoTokenizer.from_pretrained(model.modelName, {
       config: {
         ...config,
-        "transformers.js_config": transformersJSConfig
-      }
+        "transformers.js_config": transformersJSConfig,
+      },
     });
 
     const pretrainedModel = await model.pretrainedModel.from_pretrained(
@@ -185,8 +185,8 @@ async function LLMLingua2CompressorFactory(options: {
       {
         config: {
           ...config,
-          "transformers.js_config": transformersJSConfig
-        }
+          "transformers.js_config": transformersJSConfig,
+        },
       }
     );
 
@@ -199,7 +199,7 @@ async function LLMLingua2CompressorFactory(options: {
       {
         max_batch_size: model.maxBatchSize,
         max_force_token: model.maxForceTokens,
-        max_seq_length: model.maxSequenceLength
+        max_seq_length: model.maxSequenceLength,
       }
     );
 
@@ -246,8 +246,8 @@ export class LossyTextCompressor {
     this.#llmlingua2Compressor = await LLMLingua2CompressorFactory({
       llmlingua2Config: this.#config.llmlingua2Config,
       environment: {
-        isWebGPUAvailable
-      }
+        isWebGPUAvailable,
+      },
     });
     return true;
   }
@@ -257,7 +257,7 @@ export class LossyTextCompressor {
       rate: options.rate,
       forceTokens: options.keepingTokens,
       forceReserveDigit: options.keepDigits,
-      chunkEndTokens: options.chunkEndTokens
+      chunkEndTokens: options.chunkEndTokens,
     });
   }
 }
