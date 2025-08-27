@@ -56,14 +56,12 @@ npm install @atjsh/llmlingua-2
 
 You can choose between models based on your needs.
 
-1. **XLM-RoBERTa**
-   - Pros: High accuracy
-   - Cons: Slower, and slightly larger in size
-   - Public Model: **[atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank](https://huggingface.co/atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank)**
-2. **BERT**
-   - Pros: Faster, smaller in size
-   - Cons: Lower accuracy compared to XLM-RoBERTa
-   - Public Model: **[Arcoldd/llmlingua4j-bert-base-onnx](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx)**
+| Model           | Size   | Pros                       | Cons                                   | Public Model |
+|-----------------|--------|----------------------------|----------------------------------------|--------------|
+| **TinyBERT**    | [57.1 MB](https://huggingface.co/atjsh/llmlingua-2-js-tinybert-meetingbank/blob/main/onnx/model.onnx)  | Very small,<br>fast        | Lower accuracy<br>than larger models   | [atjsh/llmlingua-2-js-tinybert-meetingbank](https://huggingface.co/atjsh/llmlingua-2-js-tinybert-meetingbank) |
+| **MobileBERT**  | [99.2 MB](https://huggingface.co/atjsh/llmlingua-2-js-mobilebert-meetingbank/blob/main/onnx/model.onnx)  | Small,<br>optimized for mobile | Moderate accuracy,<br>tradeoff in depth | [atjsh/llmlingua-2-js-mobilebert-meetingbank](https://huggingface.co/atjsh/llmlingua-2-js-mobilebert-meetingbank) |
+| **BERT**        | [710 MB](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx/blob/main/model.onnx)   | Faster,<br>smaller size    | Lower accuracy<br>than XLM-RoBERTa     | [Arcoldd/llmlingua4j-bert-base-onnx](https://huggingface.co/Arcoldd/llmlingua4j-bert-base-onnx) |
+| **XLM-RoBERTa** | [2240 MB](https://huggingface.co/atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank/blob/main/onnx/model.onnx_data)  | High accuracy              | Slower,<br>slightly larger in size     | [atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank](https://huggingface.co/atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank) |
 
 [Learn More](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) about the performance of each model (actual performance may vary).
 
