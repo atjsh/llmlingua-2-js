@@ -1,34 +1,27 @@
-name: Publish
+name: CI
 
 on:
-  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
 
-concurrency:
-  group: npm-release
-  cancel-in-progress: false
+permissions:
+  contents: read
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
-    environment: npm
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 30
     steps:
-      - name: Require main
-        run: test "$GITHUB_REF_NAME" = main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - run: npm install --global npm@11.19.0
       - run: corepack yarn install --immutable
       - run: corepack yarn playwright install --with-deps chromium firefox webkit
       - run: corepack yarn test:ci
         env:
           RUN_BROWSER_MODEL_E2E: "1"
-      - run: npm publish --access public

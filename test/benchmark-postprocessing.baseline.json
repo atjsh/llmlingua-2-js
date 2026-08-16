@@ -1,0 +1,22 @@
+{
+  "shape": [50, 512, 2],
+  "warmups": 5,
+  "samples": 11,
+  "capturedFrom": {
+    "gitRevision": "82764aeb4ed71783929f126ea8d7d05d36c7621f",
+    "implementation": "@tensorflow/tfjs@4.22.0"
+  },
+  "node": {
+    "runtime": "v22.16.0",
+    "backend": "cpu",
+    "medianMs": 17.422,
+    "checksum": 12843.283105033697
+  },
+  "chromium": {
+    "runtime": "151.0.7922.34",
+    "backend": "webgl",
+    "medianMs": 7.8,
+    "checksum": 12843.283101476793
+  },
+  "note": "Informational one-machine baseline; timing is never a test threshold."
+}
