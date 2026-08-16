@@ -3,7 +3,6 @@ import {
   type DataType,
   type DeviceType,
   type PretrainedModelOptions,
-  type TransformersJSConfig,
   AutoConfig,
   AutoTokenizer,
   BertForTokenClassification,
@@ -15,6 +14,8 @@ import o200k_base from "js-tiktoken/ranks/o200k_base";
 import { MobileBertForTokenClassification } from "@/lib/transformers-js/mobileBertForTokenClassification";
 
 const oaiTokenizer = new Tiktoken(o200k_base);
+type TransformersJSConfig =
+  LLMLingua2.FactoryOptions["transformerJSConfig"];
 
 export const LLMLingua2CompressorModelName = {
   TINYBERT: "TINYBERT",
@@ -29,11 +30,11 @@ export const LLMLingua2CompressorModels = {
   TINYBERT: {
     key: "TINYBERT",
     modelName: "atjsh/llmlingua-2-js-tinybert-meetingbank",
-    defaultDevice: "auto",
+    defaultDevice: "webgpu",
     defaultModelDataType: "fp32",
     maxBatchSize: 50,
     maxForceTokens: 100,
-    maxSequenceLength: 312,
+    maxSequenceLength: 512,
 
     pretrainedModel: BertForTokenClassification,
     tokenUtils: {
@@ -45,11 +46,11 @@ export const LLMLingua2CompressorModels = {
   MOBILEBERT: {
     key: "MOBILEBERT",
     modelName: "atjsh/llmlingua-2-js-mobilebert-meetingbank",
-    defaultDevice: "auto",
+    defaultDevice: "webgpu",
     defaultModelDataType: "fp32",
     maxBatchSize: 50,
     maxForceTokens: 100,
-    maxSequenceLength: 128,
+    maxSequenceLength: 512,
 
     pretrainedModel: MobileBertForTokenClassification,
     tokenUtils: {
@@ -61,7 +62,7 @@ export const LLMLingua2CompressorModels = {
   BERT: {
     key: "BERT",
     modelName: "Arcoldd/llmlingua4j-bert-base-onnx",
-    defaultDevice: "auto",
+    defaultDevice: "webgpu",
     defaultModelDataType: "fp32",
     maxBatchSize: 50,
     maxForceTokens: 100,
@@ -75,14 +76,14 @@ export const LLMLingua2CompressorModels = {
   ROBERTA: {
     key: "ROBERTA",
     modelName: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
-    defaultDevice: "gpu",
+    defaultDevice: "webgpu",
     defaultModelDataType: "int8",
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
 
     pretrainedModelOptions: {
-      use_external_data_format: true,
+      use_external_data_format: { "model.onnx": 1 },
     },
     factory: LLMLingua2.WithXLMRoBERTa,
   },
@@ -150,7 +151,7 @@ async function LLMLingua2CompressorFactory(options: {
   const device =
     options.environment.isWebGPUAvailable === false &&
     providedTransformersJSConfig.device === "webgpu"
-      ? "auto"
+      ? "wasm"
       : providedTransformersJSConfig.device;
   const transformersJSConfig: TransformersJSConfig = {
     device,
