@@ -2,6 +2,12 @@ name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: "npm dist-tag. Use 'latest' only for the newest major line; use e.g. 'v2' when releasing an older line from its maintenance branch."
+        required: true
+        default: latest
+        type: string
 
 concurrency:
   group: npm-release
@@ -15,8 +21,6 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Require main
-        run: test "$GITHUB_REF_NAME" = main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -25,7 +29,34 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - name: Guard dist-tag
+        env:
+          DIST_TAG: ${{ inputs.dist-tag }}
+        run: |
+          set -euo pipefail
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          published=$(npm view "$name" dist-tags.latest 2>/dev/null || echo "")
+
+          {
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Ref | \`$GITHUB_REF_NAME\` |"
+            echo "| Package | \`$name@$version\` |"
+            echo "| dist-tag | \`$DIST_TAG\` |"
+            echo "| Current \`latest\` | \`${published:-none}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Releases may now run from any branch, so guard the one mistake that
+          # enables: pointing `latest` at an older major line.
+          if [ "$DIST_TAG" = "latest" ] && [ -n "$published" ]; then
+            if [ "${version%%.*}" -lt "${published%%.*}" ]; then
+              echo "Refusing to move 'latest' from $published back to $version." >&2
+              echo "Re-run with a maintenance dist-tag such as 'v${version%%.*}'." >&2
+              exit 1
+            fi
+          fi
       - run: npm install --global npm@11.19.0
       - run: corepack yarn install --immutable
       - run: corepack yarn build
-      - run: npm publish --access public
+      - run: npm publish --access public --tag "${{ inputs.dist-tag }}"

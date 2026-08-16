@@ -12,13 +12,15 @@ import {
   Tensor,
 } from "@huggingface/transformers";
 import { chunk } from "es-toolkit/array";
-import { Tiktoken } from "js-tiktoken/lite";
 
+import { resolveTokenCounter } from "./token-counter.js";
 import {
+  CountTokensFunction,
   GetPureTokenFunction,
   IsBeginOfNewWordFunction,
   Logger,
   percentile,
+  TokenCountingTokenizer,
 } from "./utils.js";
 
 type TokenSpan = readonly [start: number, end: number];
@@ -210,6 +212,11 @@ interface CompressSingleContextOptions {
 export class PromptCompressorLLMLingua2 {
   private specialTokenIds: Set<number>;
 
+  /**
+   * Normalized form of the `countTokens` constructor argument.
+   */
+  private readonly countTokens: CountTokensFunction;
+
   constructor(
     /**
      * The pre-trained model to use for compression.
@@ -234,9 +241,14 @@ export class PromptCompressorLLMLingua2 {
     private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
 
     /**
-     * The tokenizer to use calculating the compression rate.
+     * Counts tokens in the tokenizer of the LLM this prompt is destined for,
+     * which is what sizes the compression budget.
+     *
+     * Passing a tokenizer object is deprecated; pass a
+     * {@link CountTokensFunction} such as the one returned by
+     * `loadTokenCounter` instead.
      */
-    private readonly oaiTokenizer: Tiktoken,
+    countTokens: CountTokensFunction | TokenCountingTokenizer,
 
     /**
      * Configuration for LLMLingua2.
@@ -266,6 +278,7 @@ export class PromptCompressorLLMLingua2 {
      */
     private readonly logger: Logger = () => {}
   ) {
+    this.countTokens = resolveTokenCounter(countTokens);
     this.specialTokenIds = new Set(this.tokenizer.all_special_ids);
   }
 
@@ -337,7 +350,7 @@ export class PromptCompressorLLMLingua2 {
       );
     }
 
-    const n_original_token = this.oaiTokenizer.encode(context).length;
+    const n_original_token = this.countTokens(context);
 
     this.logger(
       "original token length: appx. ",
@@ -1000,7 +1013,7 @@ export class PromptCompressorLLMLingua2 {
 
           const new_token_probs: number[] = [];
           for (let i = 0; i < words.length; i++) {
-            const tokenCount = this.oaiTokenizer.encode(words[i]).length;
+            const tokenCount = this.countTokens(words[i]);
             new_token_probs.push(...Array(tokenCount).fill(word_probs[i]));
           }
 
