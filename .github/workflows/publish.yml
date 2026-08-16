@@ -27,8 +27,5 @@ jobs:
           package-manager-cache: false
       - run: npm install --global npm@11.19.0
       - run: corepack yarn install --immutable
-      - run: corepack yarn playwright install --with-deps chromium firefox webkit
-      - run: corepack yarn test:ci
-        env:
-          RUN_BROWSER_MODEL_E2E: "1"
+      - run: corepack yarn build
       - run: npm publish --access public

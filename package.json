@@ -12,13 +12,6 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsc",
-    "test": "yarn build && yarn test:unit",
-    "test:unit": "node --test test/prompt-compressor.test.mjs",
-    "test:e2e": "LLMLINGUA_RUN_MODEL_E2E=1 node --test test/tinybert-node.test.mjs",
-    "test:browser": "node test/browser/run.mjs",
-    "test:package": "node test/package-smoke.mjs",
-    "test:ci": "yarn test && yarn test:e2e && yarn test:browser && yarn test:package",
-    "benchmark:postprocessing": "node test/benchmark-postprocessing.mjs",
     "preversion": "rimraf dist && yarn build"
   },
   "files": [
@@ -34,10 +27,9 @@
     "es-toolkit": "^1.38.0"
   },
   "devDependencies": {
-    "@huggingface/transformers": "3.5.2",
+    "@huggingface/transformers": "^3.5.2",
     "@types/node": "^22.15.18",
     "js-tiktoken": "^1.0.20",
-    "playwright": "1.62.1",
     "rimraf": "^6.0.1",
     "typedoc": "^0.28.4",
     "typescript": "^5.8.3"

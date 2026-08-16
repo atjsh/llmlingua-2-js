@@ -72,27 +72,12 @@ For more details on how to use the library, please refer to the [API reference d
 
 # Testing
 
-Build the package and run the fast regression suite:
+> Unit tests are not available at the moment.
 
-```sh
-yarn test
-```
+E2E tests are partially available in following directories:
 
-The release checks also include the pinned TinyBERT golden, browser coverage,
-and a packed-package smoke test:
-
-```sh
-yarn test:e2e
-yarn playwright install chromium firefox webkit
-RUN_BROWSER_MODEL_E2E=1 yarn test:browser
-yarn test:package
-```
-
-The model E2Es download their pinned model revision on first use. Run the
-non-gating postprocessing benchmark with `yarn benchmark:postprocessing`.
-Frozen E2E selections and output strings are exact release gates;
-intermediate floating-point probability bits are not part of the compatibility
-contract, so legitimate fp32 engines may differ in otherwise-untested near ties.
+- `src/e2e`
+- `examples/**`
 
 # License
 
