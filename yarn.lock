@@ -9,6 +9,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@atjsh/llmlingua-2@workspace:."
   dependencies:
+    "@huggingface/tokenizers": "npm:^0.1.3"
     "@huggingface/transformers": "npm:^4.2.0"
     "@types/node": "npm:^22.15.18"
     es-toolkit: "npm:^1.38.0"
@@ -17,8 +18,11 @@ __metadata:
     typedoc: "npm:^0.28.4"
     typescript: "npm:^5.8.3"
   peerDependencies:
+    "@huggingface/tokenizers": ^0.1.3
     "@huggingface/transformers": ^4.2.0
-    js-tiktoken: "*"
+  peerDependenciesMeta:
+    "@huggingface/tokenizers":
+      optional: true
   languageName: unknown
   linkType: soft
 

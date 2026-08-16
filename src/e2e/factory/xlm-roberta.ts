@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: MIT
 
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
 import { LLMLingua2 } from "../../index.js";
 import { EXAMPLES } from "../long-texts.js";
 
 const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
-const oai_tokenizer = new Tiktoken(o200k_base);
+const countTokens = await LLMLingua2.loadTokenCounter("Xenova/gpt-4o");
 
 const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName, {
   transformerJSConfig: {
     device: "auto",
     dtype: "fp32",
   },
-  oaiTokenizer: oai_tokenizer,
+  countTokens,
   modelSpecificOptions: {
     use_external_data_format: true,
   },
