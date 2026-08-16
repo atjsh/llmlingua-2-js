@@ -8,10 +8,10 @@
 import {
   PreTrainedModel,
   PreTrainedTokenizer,
+  softmax,
   Tensor,
   TokenClassifierOutput,
 } from "@huggingface/transformers";
-import { softmax, tensor3d } from "@tensorflow/tfjs";
 import { chunk } from "es-toolkit/array";
 import { Tiktoken } from "js-tiktoken/lite";
 
@@ -542,18 +542,13 @@ export class PromptCompressorLLMLingua2 {
 
       this.logger("logits shape:", outputs.logits.dims);
 
-      const logits = tensor3d(
-        outputs.logits.data,
-        [batch_size, seq_len, num_classes],
-        "float32"
-      );
-
-      this.logger("logits tensor created with shape:", logits.shape);
-
-      const probs = softmax(logits, -1);
+      const logits = outputs.logits.data as Float32Array;
 
       for (let j = 0; j < batch_size; j++) {
-        const chunk_probs_class1 = probs.slice([j, 0, 1], [1, -1, 1]);
+        const chunk_probs_class1 = Array.from({ length: seq_len }, (_, i) => {
+          const offset = (j * seq_len + i) * num_classes;
+          return softmax(logits.subarray(offset, offset + num_classes))[1];
+        });
         const chunk_ids = input_ids[j] as Tensor;
         const chunk_mask = attention_mask[j] as Tensor;
 
@@ -561,9 +556,9 @@ export class PromptCompressorLLMLingua2 {
           Number(v)
         );
 
-        const active_probs = chunk_probs_class1
-          .dataSync()
-          .filter((_, i) => chunk_mask_number_array[i] > 0);
+        const active_probs = chunk_probs_class1.filter(
+          (_, i) => chunk_mask_number_array[i] > 0
+        );
 
         const active_ids = chunk_ids.data
           .filter((_, i) => chunk_mask_number_array[i] > 0n)

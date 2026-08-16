@@ -1,6 +1,6 @@
 {
   "name": "@atjsh/llmlingua-2",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "packageManager": "yarn@4.9.1",
   "description": "JavaScript/TypeScript Implementation of LLMLingua-2",
   "license": "MIT",
@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "@huggingface/transformers": "^3.5.2",
-    "@tensorflow/tfjs": "^4.22.0",
     "@types/node": "^22.15.18",
     "js-tiktoken": "^1.0.20",
     "rimraf": "^6.0.1",
@@ -37,7 +36,6 @@
   },
   "peerDependencies": {
     "@huggingface/transformers": "*",
-    "@tensorflow/tfjs": "*",
     "js-tiktoken": "*"
   },
   "keywords": [
@@ -59,8 +57,6 @@
     "huggingface",
     "hf",
     "transformers",
-    "tensorflow",
-    "tfjs",
     "webgpu",
     "webassembly",
     "onnx",
