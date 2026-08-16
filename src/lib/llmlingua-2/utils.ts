@@ -48,6 +48,33 @@ export const get_pure_tokens_bert_base_multilingual_cased: GetPureTokenFunction 
   };
 
 /**
+ * Counts how many tokens `text` occupies in the tokenizer of the LLM the compressed
+ * prompt is destined for.
+ *
+ * This is used only to size the compression budget — it never feeds the token
+ * classification model. It corresponds to `get_token_length(..., use_oai_tokenizer=True)`
+ * of the original LLMLingua implementation.
+ *
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e0e9d99beb94098bbd924aa53c2c112eac41c758/llmlingua/prompt_compressor.py#L975)
+ *
+ * @category Adaptors
+ */
+export type CountTokensFunction = (text: string) => number;
+
+/**
+ * A tokenizer object whose `encode` returns an array-like of tokens, such as a
+ * `js-tiktoken` `Tiktoken`. The shape is structural on purpose: this package does
+ * not depend on any tokenizer library.
+ *
+ * @deprecated Supply a {@link CountTokensFunction} instead.
+ *
+ * @category Adaptors
+ */
+export interface TokenCountingTokenizer {
+  encode(text: string): { length: number };
+}
+
+/**
  * Implementation on `is_begin_of_new_word` function of original LLMLingua implementation.
  * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L81)
  *

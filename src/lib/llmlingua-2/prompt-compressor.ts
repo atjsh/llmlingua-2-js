@@ -12,14 +12,16 @@ import {
   Tensor,
 } from "@huggingface/transformers";
 import { chunk } from "es-toolkit/array";
-import { Tiktoken } from "js-tiktoken/lite";
 
+import { resolveTokenCounter } from "./token-counter.js";
 import {
+  CountTokensFunction,
   GetPureTokenFunction,
   IsBeginOfNewWordFunction,
   Logger,
   percentile,
   replace_added_token,
+  TokenCountingTokenizer,
 } from "./utils.js";
 
 /**
@@ -167,6 +169,11 @@ export class PromptCompressorLLMLingua2 {
   private addedTokens: string[] = [];
   private specialTokenIds: Set<number>;
 
+  /**
+   * Normalized form of the `countTokens` constructor argument.
+   */
+  private readonly countTokens: CountTokensFunction;
+
   constructor(
     /**
      * The pre-trained model to use for compression.
@@ -191,9 +198,14 @@ export class PromptCompressorLLMLingua2 {
     private readonly isBeginOfNewWord: IsBeginOfNewWordFunction,
 
     /**
-     * The tokenizer to use calculating the compression rate.
+     * Counts tokens in the tokenizer of the LLM this prompt is destined for,
+     * which is what sizes the compression budget.
+     *
+     * Passing a tokenizer object is deprecated; pass a
+     * {@link CountTokensFunction} such as the one returned by
+     * `loadTokenCounter` instead.
      */
-    private readonly oaiTokenizer: Tiktoken,
+    countTokens: CountTokensFunction | TokenCountingTokenizer,
 
     /**
      * Configuration for LLMLingua2.
@@ -223,6 +235,8 @@ export class PromptCompressorLLMLingua2 {
      */
     private readonly logger: Logger = console.log
   ) {
+    this.countTokens = resolveTokenCounter(countTokens);
+
     for (let i = 0; i < this.llmlingua2Config.max_force_token; i++) {
       this.addedTokens.push(`[NEW${i}]`);
     }
@@ -619,9 +633,9 @@ export class PromptCompressorLLMLingua2 {
           const word = words[i];
           const word_prob = word_probs[i];
 
-          const new_token = this.oaiTokenizer.encode(word);
+          const new_token_count = this.countTokens(word);
 
-          new_token_probs.push(...Array(new_token.length).fill(word_prob));
+          new_token_probs.push(...Array(new_token_count).fill(word_prob));
         }
 
         const threshold = percentile(new_token_probs, 100 * reduce_rate);

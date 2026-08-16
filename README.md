@@ -31,7 +31,7 @@ yarn install
 This implementation depends on the following libraries:
 
 - [**@huggingface/transformers**](https://github.com/huggingface/transformers.js)
-- [**js-tiktoken**](https://www.npmjs.com/package/js-tiktoken)
+- [**@huggingface/tokenizers**](https://github.com/huggingface/tokenizers.js)
 
 Especially, the `@huggingface/transformers` library utilizes various computational optimizations to achieve high performance. Please consult if the running environment supports the minimum requirements from these libraries.
 
@@ -42,7 +42,7 @@ You can use the library by downloading the library from [npm](https://www.npmjs.
 First, install the dependencies:
 
 ```sh
-npm install @huggingface/transformers js-tiktoken
+npm install @huggingface/transformers @huggingface/tokenizers
 ```
 
 Then, install the library:
@@ -65,6 +65,38 @@ You can choose between models based on your needs.
 [Learn More](https://llmlingua.com/llmlingua2.html#:~:text=our%20classification%20model.-,Performance,-We%20evaluate%20LLMLingua) about the performance of each model (actual performance may vary).
 
 The model files will be downloaded automatically by default.
+
+## Token Counting
+
+Compression is budgeted in the tokens of the LLM you send the compressed prompt
+to, not in the tokens of the classifier model above. You therefore supply a
+`countTokens` function alongside the model.
+
+The easiest way is `loadTokenCounter`, which downloads a tokenizer from the
+Hugging Face Hub:
+
+```ts
+const countTokens = await LLMLingua2.loadTokenCounter("Xenova/gpt-4o");
+```
+
+Any Hub tokenizer works, so the budget can match a non-GPT target LLM. For
+OpenAI-compatible counting:
+
+| Hub model | tiktoken encoding | Note |
+|-----------|-------------------|------|
+| `Xenova/gpt-4o` | `o200k_base` | What this library has always used |
+| `Xenova/gpt-3.5-turbo` | `cl100k_base` | What the original LLMLingua counts with |
+
+`countTokens` is just `(text: string) => number`, so you can supply your own
+instead — including one backed by a tokenizer you already have loaded:
+
+```ts
+const countTokens = LLMLingua2.createTokenCounter(myHuggingFaceTokenizer);
+```
+
+> The previous `oaiTokenizer` option still works and still accepts a
+> `js-tiktoken` `Tiktoken`, but it is deprecated in favour of `countTokens` and
+> will be removed in the next major release.
 
 ## [API Reference](https://llmlingua-2-js-typedoc.vercel.app/modules/LLMLingua2.html)
 

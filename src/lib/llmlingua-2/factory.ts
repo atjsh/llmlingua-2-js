@@ -13,15 +13,16 @@ import {
   AutoTokenizer,
   PretrainedConfig,
 } from "@huggingface/transformers";
-import { Tiktoken } from "js-tiktoken";
 
 import { PromptCompressorLLMLingua2 } from "./prompt-compressor.js";
 import {
+  CountTokensFunction,
   get_pure_tokens_bert_base_multilingual_cased,
   get_pure_tokens_xlm_roberta_large,
   is_begin_of_new_word_bert_base_multilingual_cased,
   is_begin_of_new_word_xlm_roberta_large,
   Logger,
+  TokenCountingTokenizer,
 } from "./utils.js";
 
 type PreTrainedTokenizerOptions = Parameters<
@@ -31,6 +32,19 @@ type PretrainedModelOptions = Parameters<
   typeof AutoModelForTokenClassification.from_pretrained
 >[1];
 type TransformersJSConfig = PretrainedConfig["transformers.js_config"];
+
+function selectTokenCounter(
+  options: LLMLingua2FactoryOptions
+): CountTokensFunction | TokenCountingTokenizer {
+  const counter = options.countTokens ?? options.oaiTokenizer;
+  if (!counter) {
+    throw new TypeError(
+      "LLMLingua2 factory requires a token counter: pass `countTokens` (see `loadTokenCounter`). " +
+        "The deprecated `oaiTokenizer` option is also accepted."
+    );
+  }
+  return counter;
+}
 
 async function prepareDependencies(
   modelName: string,
@@ -94,9 +108,22 @@ export interface LLMLingua2FactoryOptions {
   transformerJSConfig: TransformersJSConfig;
 
   /**
-   * The tokenizer to use calculating the compression rate.
+   * Counts tokens in the tokenizer of the LLM the compressed prompt is destined
+   * for, which is what sizes the compression budget.
+   *
+   * Takes precedence over {@link LLMLingua2FactoryOptions.oaiTokenizer}. Build
+   * one with `loadTokenCounter`, or supply any `(text: string) => number`.
    */
-  oaiTokenizer: Tiktoken;
+  countTokens?: CountTokensFunction;
+
+  /**
+   * The tokenizer to use calculating the compression rate.
+   *
+   * @deprecated Pass {@link LLMLingua2FactoryOptions.countTokens} instead. This
+   *   option is retained so existing `js-tiktoken` callers keep working, and
+   *   will be removed in the next major release.
+   */
+  oaiTokenizer?: TokenCountingTokenizer;
 
   /**
    * Optional pretrained configuration.
@@ -154,15 +181,15 @@ export interface LLMLingua2FactoryReturn {
  *
  * @category Factory
  * 
- * @example 
+ * @example
  * ```ts
 import { LLMLingua2 } from "@atjsh/llmlingua-2";
 
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
 const modelName = "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank";
-const oai_tokenizer = new Tiktoken(o200k_base);
+
+// "Xenova/gpt-4o" is tiktoken's o200k_base. Use "Xenova/gpt-3.5-turbo" for
+// cl100k_base, which is what the original LLMLingua counts with.
+const countTokens = await LLMLingua2.loadTokenCounter("Xenova/gpt-4o");
 
 const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName,
   {
@@ -170,7 +197,7 @@ const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName,
       device: "auto",
       dtype: "fp32",
     },
-    oaiTokenizer: oai_tokenizer,
+    countTokens,
     modelSpecificOptions: {
       use_external_data_format: true,
     },
@@ -191,12 +218,12 @@ export async function WithXLMRoBERTa(
 ): Promise<LLMLingua2FactoryReturn> {
   const {
     transformerJSConfig,
-    oaiTokenizer,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
     logger = console.log,
   } = options;
+  const countTokens = selectTokenCounter(options);
 
   const { model, tokenizer, config } = await prepareDependencies(
     modelName,
@@ -212,7 +239,7 @@ export async function WithXLMRoBERTa(
     tokenizer,
     get_pure_tokens_xlm_roberta_large,
     is_begin_of_new_word_xlm_roberta_large,
-    oaiTokenizer,
+    countTokens,
     undefined,
     logger
   );
@@ -233,15 +260,15 @@ export async function WithXLMRoBERTa(
  *
  * @category Factory
  * 
- * @example 
+ * @example
  * ```ts
 import { LLMLingua2 } from "@atjsh/llmlingua-2";
 
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
 const modelName = "Arcoldd/llmlingua4j-bert-base-onnx";
-const oai_tokenizer = new Tiktoken(o200k_base);
+
+// "Xenova/gpt-4o" is tiktoken's o200k_base. Use "Xenova/gpt-3.5-turbo" for
+// cl100k_base, which is what the original LLMLingua counts with.
+const countTokens = await LLMLingua2.loadTokenCounter("Xenova/gpt-4o");
 
 const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(modelName,
   {
@@ -249,7 +276,7 @@ const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(modelName,
       device: "auto",
       dtype: "fp32",
     },
-    oaiTokenizer: oai_tokenizer,
+    countTokens,
     modelSpecificOptions: {
       subfolder: "",
     },
@@ -270,12 +297,12 @@ export async function WithBERTMultilingual(
 ): Promise<LLMLingua2FactoryReturn> {
   const {
     transformerJSConfig,
-    oaiTokenizer,
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
     logger = console.log,
   } = options;
+  const countTokens = selectTokenCounter(options);
 
   const { model, tokenizer, config } = await prepareDependencies(
     modelName,
@@ -291,7 +318,7 @@ export async function WithBERTMultilingual(
     tokenizer,
     get_pure_tokens_bert_base_multilingual_cased,
     is_begin_of_new_word_bert_base_multilingual_cased,
-    oaiTokenizer,
+    countTokens,
     undefined,
     logger
   );

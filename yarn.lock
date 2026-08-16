@@ -9,6 +9,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@atjsh/llmlingua-2@workspace:."
   dependencies:
+    "@huggingface/tokenizers": "npm:^0.1.3"
     "@huggingface/transformers": "npm:^3.5.2"
     "@types/node": "npm:^22.15.18"
     es-toolkit: "npm:^1.38.0"
@@ -17,8 +18,11 @@ __metadata:
     typedoc: "npm:^0.28.4"
     typescript: "npm:^5.8.3"
   peerDependencies:
+    "@huggingface/tokenizers": ^0.1.3
     "@huggingface/transformers": ^3.5.2 || ^4.0.0
-    js-tiktoken: "*"
+  peerDependenciesMeta:
+    "@huggingface/tokenizers":
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -48,6 +52,13 @@ __metadata:
   version: 0.4.1
   resolution: "@huggingface/jinja@npm:0.4.1"
   checksum: 10c0/366747b9d93f80ec8a203c5599784b9dbe110a99ca948e05d2ad39b55da380c9a1e84d09748b805dca9772283a897518e8d7a039ceccd08b7e32e7a7edc29856
+  languageName: node
+  linkType: hard
+
+"@huggingface/tokenizers@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@huggingface/tokenizers@npm:0.1.3"
+  checksum: 10c0/58b89e167c8194e5f55635e1f1c68714ae002ca8b93d1e1819987e8ea4ccddb5a649a7c8ad5bcba63bbd6f023a32d8ee2469d2c4d255b95f4714508c5c1982e8
   languageName: node
   linkType: hard
 

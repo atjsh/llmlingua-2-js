@@ -9,12 +9,15 @@ import {
   BertForTokenClassification,
   PreTrainedModel,
 } from "@huggingface/transformers";
-import { Tiktoken } from "js-tiktoken/lite";
-import o200k_base from "js-tiktoken/ranks/o200k_base";
-
 import { MobileBertForTokenClassification } from "@/lib/transformers-js/mobileBertForTokenClassification";
 
-const oaiTokenizer = new Tiktoken(o200k_base);
+// "Xenova/gpt-4o" is tiktoken's o200k_base. The tokenizer files are fetched once
+// and reused across model switches.
+let countTokensPromise: Promise<LLMLingua2.CountTokensFunction> | undefined;
+function getCountTokens(): Promise<LLMLingua2.CountTokensFunction> {
+  countTokensPromise ??= LLMLingua2.loadTokenCounter("Xenova/gpt-4o");
+  return countTokensPromise;
+}
 
 export const LLMLingua2CompressorModelName = {
   TINYBERT: "TINYBERT",
@@ -157,10 +160,12 @@ async function LLMLingua2CompressorFactory(options: {
     dtype: providedTransformersJSConfig.modelDataType,
   };
 
+  const countTokens = await getCountTokens();
+
   if (model.factory) {
     const { promptCompressor } = await model.factory(model.modelName, {
       transformerJSConfig: transformersJSConfig,
-      oaiTokenizer,
+      countTokens,
       modelSpecificOptions: model.pretrainedModelOptions,
     });
 
@@ -195,7 +200,7 @@ async function LLMLingua2CompressorFactory(options: {
       tokenizer,
       model.tokenUtils.getPureTokens,
       model.tokenUtils.isBeginOfNewWord,
-      oaiTokenizer,
+      countTokens,
       {
         max_batch_size: model.maxBatchSize,
         max_force_token: model.maxForceTokens,

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@atjsh/llmlingua-2": "^2.0.5",
+    "@huggingface/tokenizers": "^0.1.3",
     "@huggingface/transformers": "^3.5.2",
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-collapsible": "^1.1.11",
@@ -27,7 +28,6 @@
     "cmdk": "^1.1.1",
     "comlink": "^4.4.2",
     "glob-to-regexp": "^0.4.1",
-    "js-tiktoken": "^1.0.20",
     "lucide-react": "^0.515.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
