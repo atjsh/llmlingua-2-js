@@ -1,0 +1,22 @@
+{
+  "2.0.5-baseline": {
+    "mock": {
+      "outputBytes": 63851,
+      "outputSha256": "4f0743888de53c0a194654840e40447fa9f85f5c34520843559672c26d2f8efb"
+    },
+    "tinyBert": {
+      "outputBytes": 207,
+      "outputSha256": "cd6808f5ec16147dda2f19cdcdffc7bbe0e6655a4c5ea8bef494a396b24a84a7"
+    }
+  },
+  "3.0.0-candidate": {
+    "mock": {
+      "outputBytes": 62601,
+      "outputSha256": "267a2e9cf20da9ddab1eeeaed3f9da26a402378d4bde388ef99e86afecfb0f3f"
+    },
+    "tinyBert": {
+      "outputBytes": 205,
+      "outputSha256": "d2356e847c821e51831db8c43b0de789abe7ae34a0f594d748a54dc00d871418"
+    }
+  }
+}

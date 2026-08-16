@@ -11,9 +11,13 @@ import {
   AutoConfig,
   AutoModelForTokenClassification,
   AutoTokenizer,
-  PretrainedConfig,
+  type PretrainedConfig,
+  type PretrainedModelOptions,
+  type PretrainedTokenizerOptions,
+  type PreTrainedModel,
+  type PreTrainedTokenizer,
 } from "@huggingface/transformers";
-import { Tiktoken } from "js-tiktoken";
+import type { Tiktoken } from "js-tiktoken";
 
 import { PromptCompressorLLMLingua2 } from "./prompt-compressor.js";
 import {
@@ -21,16 +25,11 @@ import {
   get_pure_tokens_xlm_roberta_large,
   is_begin_of_new_word_bert_base_multilingual_cased,
   is_begin_of_new_word_xlm_roberta_large,
-  Logger,
+  type Logger,
 } from "./utils.js";
 
-type PreTrainedTokenizerOptions = Parameters<
-  typeof AutoTokenizer.from_pretrained
->[1];
-type PretrainedModelOptions = Parameters<
-  typeof AutoModelForTokenClassification.from_pretrained
->[1];
 type TransformersJSConfig = PretrainedConfig["transformers.js_config"];
+const silentLogger: Logger = () => undefined;
 
 async function prepareDependencies(
   modelName: string,
@@ -38,7 +37,7 @@ async function prepareDependencies(
   logger: Logger,
 
   pretrainedConfig?: PretrainedConfig | null,
-  pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null,
+  pretrainedTokenizerOptions?: PretrainedTokenizerOptions | null,
   modelSpecificOptions?: PretrainedModelOptions | null
 ) {
   const config =
@@ -48,9 +47,7 @@ async function prepareDependencies(
   const tokenizerConfig = {
     config: {
       ...config,
-      ...(transformerJSConfig
-        ? { "transformers.js_config": transformerJSConfig }
-        : {}),
+      "transformers.js_config": transformerJSConfig,
     },
     ...pretrainedTokenizerOptions,
   };
@@ -65,9 +62,7 @@ async function prepareDependencies(
   const modelConfig = {
     config: {
       ...config,
-      ...(transformerJSConfig
-        ? { "transformers.js_config": transformerJSConfig }
-        : {}),
+      "transformers.js_config": transformerJSConfig,
     },
     ...modelSpecificOptions,
   };
@@ -106,15 +101,15 @@ export interface LLMLingua2FactoryOptions {
   /**
    * Optional pretrained tokenizer options.
    */
-  pretrainedTokenizerOptions?: PreTrainedTokenizerOptions | null;
+  pretrainedTokenizerOptions?: PretrainedTokenizerOptions | null;
 
   /**
-   * Optional model-specific options.
+   * Optional model-specific options passed to Transformers.js unchanged.
    */
   modelSpecificOptions?: PretrainedModelOptions | null;
 
   /**
-   * Optional logger function.
+   * Optional logger function. Logging is disabled when omitted.
    */
   logger?: Logger;
 }
@@ -135,17 +130,17 @@ export interface LLMLingua2FactoryReturn {
   /**
    * The model used for token classification.
    */
-  model: AutoModelForTokenClassification;
+  model: PreTrainedModel;
 
   /**
    * The tokenizer used for tokenization.
    */
-  tokenizer: AutoTokenizer;
+  tokenizer: PreTrainedTokenizer;
 
   /**
    * The configuration used for the model.
    */
-  config: AutoConfig;
+  config: PretrainedConfig;
 }
 
 /**
@@ -167,12 +162,12 @@ const oai_tokenizer = new Tiktoken(o200k_base);
 const { promptCompressor } = await LLMLingua2.WithXLMRoBERTa(modelName,
   {
     transformerJSConfig: {
-      device: "auto",
+      device: "cpu",
       dtype: "fp32",
     },
     oaiTokenizer: oai_tokenizer,
     modelSpecificOptions: {
-      use_external_data_format: true,
+      use_external_data_format: { "model.onnx": 1 },
     },
   }
 );
@@ -195,7 +190,7 @@ export async function WithXLMRoBERTa(
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
-    logger = console.log,
+    logger = silentLogger,
   } = options;
 
   const { model, tokenizer, config } = await prepareDependencies(
@@ -246,7 +241,7 @@ const oai_tokenizer = new Tiktoken(o200k_base);
 const { promptCompressor } = await LLMLingua2.WithBERTMultilingual(modelName,
   {
     transformerJSConfig: {
-      device: "auto",
+      device: "cpu",
       dtype: "fp32",
     },
     oaiTokenizer: oai_tokenizer,
@@ -274,7 +269,7 @@ export async function WithBERTMultilingual(
     pretrainedConfig,
     pretrainedTokenizerOptions,
     modelSpecificOptions,
-    logger = console.log,
+    logger = silentLogger,
   } = options;
 
   const { model, tokenizer, config } = await prepareDependencies(

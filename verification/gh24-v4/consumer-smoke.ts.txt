@@ -1,0 +1,23 @@
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
+import type { PretrainedConfig } from "@huggingface/transformers";
+import type { Tiktoken } from "js-tiktoken/lite";
+
+const transformerJSConfig: PretrainedConfig["transformers.js_config"] = {
+  device: "cpu",
+  dtype: "fp32",
+};
+
+const options: LLMLingua2.FactoryOptions = {
+  transformerJSConfig,
+  oaiTokenizer: {} as Tiktoken,
+  modelSpecificOptions: {
+    use_external_data_format: { "model.onnx": 1 },
+  },
+};
+
+void LLMLingua2.WithBERTMultilingual("model", options);
+void LLMLingua2.WithXLMRoBERTa("model", options);
+
+declare const compressor: LLMLingua2.PromptCompressor;
+void compressor.compress_prompt("text", { rate: 0.5, token_to_word: "mean" });
+void compressor.compress_prompt("text", { rate: 0.5, token_to_Word: "first" });

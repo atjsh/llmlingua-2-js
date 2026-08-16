@@ -94,24 +94,6 @@ export const is_begin_of_new_word_bert_base_multilingual_cased: IsBeginOfNewWord
   };
 
 /**
- * Implementation on `replace_added_token` function of original LLMLingua implementation.
- * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/utils.py#L102)
- *
- * @category Utils
- */
-export function replace_added_token(
-  token: string,
-  token_map: Record<string, string>
-) {
-  let t = token;
-  for (const [ori, added] of Object.entries(token_map)) {
-    t = t.replaceAll(added, ori);
-  }
-
-  return t;
-}
-
-/**
  * Calculate the **p-th percentile** of a numeric array.
  *
  * The function follows the “inclusive” linear-interpolation rule used by Excel’s
@@ -134,13 +116,16 @@ export function replace_added_token(
  *
  * @example
  * const data = [7, 15, 36, 39, 40, 41];
- * percentile(data, 25); // → 15   (1st quartile)
+ * percentile(data, 25); // → 20.25 (1st quartile)
  * percentile(data, 50); // → 37.5 (median with interpolation)
  * percentile(data, 90); // → 40.5
  *
  * @category Utils
  */
 export function percentile(arr: number[], p: number): number {
+  if (!Number.isFinite(p) || p < 0 || p > 100) {
+    throw new RangeError("p must be between 0 and 100");
+  }
   if (arr.length === 0) return 0;
   const sortedArr = [...arr].sort((a, b) => a - b);
   const k = (sortedArr.length - 1) * (p / 100);
