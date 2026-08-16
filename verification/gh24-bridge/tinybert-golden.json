@@ -1,0 +1,20 @@
+{
+  "capturedFrom": {
+    "gitRevision": "82764aeb4ed71783929f126ea8d7d05d36c7621f",
+    "runtime": "node",
+    "transformers": "3.5.2"
+  },
+  "reverifiedAgainst": {
+    "gitRevision": "e131f6ed9084a8a1fc6d9e9f836f7f8601bff4aa",
+    "packageVersion": "2.0.4"
+  },
+  "expected": {
+    "model": "atjsh/llmlingua-2-js-tinybert-meetingbank",
+    "revision": "a9af82841d3f815c9c492b13791c6517154791d3",
+    "device": "cpu",
+    "dtype": "fp32",
+    "input": "src/e2e/long-texts.ts#EXAMPLES[5]",
+    "length": 1431,
+    "sha256": "b70a2a334efd2b2887db255c37865705c941d6028704335a2d5a44e325a56008"
+  }
+}

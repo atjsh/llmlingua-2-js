@@ -10,7 +10,6 @@ import {
   PreTrainedTokenizer,
   softmax,
   Tensor,
-  TokenClassifierOutput,
 } from "@huggingface/transformers";
 import { chunk } from "es-toolkit/array";
 import { Tiktoken } from "js-tiktoken/lite";
@@ -166,7 +165,7 @@ interface CompressSingleContextOptions {
  */
 export class PromptCompressorLLMLingua2 {
   private addedTokens: string[] = [];
-  private specialTokens: Set<string>;
+  private specialTokenIds: Set<number>;
 
   constructor(
     /**
@@ -228,15 +227,7 @@ export class PromptCompressorLLMLingua2 {
       this.addedTokens.push(`[NEW${i}]`);
     }
 
-    const specialTokensMap = this.tokenizer.special_tokens || {};
-
-    this.specialTokens = new Set<string>();
-
-    for (const [key, value] of Object.entries(specialTokensMap)) {
-      if (key !== "additional_special_tokens") {
-        this.specialTokens.add(value);
-      }
-    }
+    this.specialTokenIds = new Set(this.tokenizer.all_special_ids);
   }
 
   /**
@@ -368,13 +359,17 @@ export class PromptCompressorLLMLingua2 {
     const maxLenTokens = this.llmlingua2Config.max_seq_length - 2;
     const origin_list: string[] = [];
     const origin_tokens = this.tokenizer.tokenize(originText);
+    const origin_token_ids = this.tokenizer.encode(originText, {
+      add_special_tokens: false,
+    });
     const n = origin_tokens.length;
     let st = 0;
 
     while (st < n) {
       if (st + maxLenTokens > n - 1) {
-        const chunk = this.tokenizer.decoder.decode(
-          origin_tokens.slice(st, n - 1)
+        const chunk = this.decodeTokenIds(
+          origin_token_ids.slice(st, n - 1),
+          origin_tokens[st]
         );
         origin_list.push(chunk);
         break;
@@ -388,8 +383,9 @@ export class PromptCompressorLLMLingua2 {
           }
         }
 
-        const chunk = this.tokenizer.decoder.decode(
-          origin_tokens.slice(st, ed + 1)
+        const chunk = this.decodeTokenIds(
+          origin_token_ids.slice(st, ed + 1),
+          origin_tokens[st]
         );
 
         origin_list.push(chunk);
@@ -404,26 +400,42 @@ export class PromptCompressorLLMLingua2 {
     return this.tokenizer.tokenize(text).length;
   }
 
+  private decodeTokenIds(tokenIds: number[], firstToken?: string): string {
+    if (tokenIds.length === 0) return "";
+
+    const decoded = this.tokenizer.decode(tokenIds, {
+      clean_up_tokenization_spaces: false,
+    });
+
+    return firstToken?.startsWith("▁") && !decoded.startsWith(" ")
+      ? ` ${decoded}`
+      : decoded;
+  }
+
   private mergeTokenToWord(
     tokens: string[],
+    token_ids: number[],
     token_probs: number[],
     force_tokens_original: string[],
     token_map: Record<string, string>,
     force_reserve_digit: boolean
   ): {
     words: string[];
+    word_token_ids: number[][];
     word_probs_with_force_logic: number[][];
     valid_token_probs_no_force: number[][];
   } {
     const words: string[] = [];
+    const word_token_ids: number[][] = [];
     const word_probs_with_force_logic: number[][] = [];
     const valid_token_probs_no_force: number[][] = [];
 
     for (let i = 0; i < tokens.length; i++) {
       let token = tokens[i];
+      const token_id = token_ids[i];
       let prob = token_probs[i];
 
-      if (this.specialTokens.has(token)) {
+      if (this.specialTokenIds.has(token_id)) {
       } else if (
         this.isBeginOfNewWord(token, force_tokens_original, token_map)
       ) {
@@ -438,6 +450,7 @@ export class PromptCompressorLLMLingua2 {
         }
         token = replace_added_token(token, token_map);
         words.push(token);
+        word_token_ids.push([token_id]);
         word_probs_with_force_logic.push([
           force_reserve_digit && token.match(/^\d/) ? 1.0 : prob,
         ]);
@@ -464,11 +477,18 @@ export class PromptCompressorLLMLingua2 {
             valid_token_probs_no_force.length - 1
           ].push(prob);
         }
+
+        if (word_token_ids.length === 0) {
+          word_token_ids.push([token_id]);
+        } else {
+          word_token_ids[word_token_ids.length - 1].push(token_id);
+        }
       }
     }
 
     return {
       words,
+      word_token_ids,
       word_probs_with_force_logic,
       valid_token_probs_no_force,
     };
@@ -529,12 +549,12 @@ export class PromptCompressorLLMLingua2 {
 
       this.logger("input tokenization finished");
 
-      const input_ids_dims = input_ids.dims;
+      const [, input_ids_seq_len] = input_ids.dims;
 
-      const outputs: TokenClassifierOutput = await this.model({
+      const outputs = (await this.model({
         input_ids,
         attention_mask,
-      });
+      })) as { logits: Tensor };
 
       this.logger("model inference finished");
 
@@ -549,7 +569,6 @@ export class PromptCompressorLLMLingua2 {
           const offset = (j * seq_len + i) * num_classes;
           return softmax(logits.subarray(offset, offset + num_classes))[1];
         });
-        const chunk_ids = input_ids[j] as Tensor;
         const chunk_mask = attention_mask[j] as Tensor;
 
         const chunk_mask_number_array = Array.from(chunk_mask.data, (v) =>
@@ -560,28 +579,35 @@ export class PromptCompressorLLMLingua2 {
           (_, i) => chunk_mask_number_array[i] > 0
         );
 
-        const active_ids = chunk_ids.data
-          .filter((_, i) => chunk_mask_number_array[i] > 0n)
-          .filter((v) => v !== 0n);
+        const input_ids_offset = j * input_ids_seq_len;
+        const active_ids_with_zero = Array.from(
+          { length: input_ids_seq_len },
+          (_, i) => Number(input_ids.data[input_ids_offset + i])
+        ).filter((_, i) => chunk_mask_number_array[i] > 0);
+        const active_tokens = this.tokenizer
+          .tokenize(context[j], { add_special_tokens: true })
+          .slice(0, active_probs.length);
+        const active_ids = active_ids_with_zero.filter((v) => v !== 0);
+        const token_list = active_tokens.filter(
+          (_, i) => active_ids_with_zero[i] !== 0
+        );
 
         if (active_ids.length === 0) {
           compressed_chunk_strings_flat.push("");
           continue;
         }
 
-        const token_list = this.tokenizer.model.convert_ids_to_tokens(
-          new Tensor("int64", active_ids, [active_ids.length]).tolist()
-        );
-
         const token_prob_list = Array.from(active_probs);
 
-        const { words, word_probs_with_force_logic } = this.mergeTokenToWord(
-          token_list,
-          token_prob_list,
-          force_tokens,
-          token_map,
-          force_reserve_digit
-        );
+        const { words, word_token_ids, word_probs_with_force_logic } =
+          this.mergeTokenToWord(
+            token_list,
+            active_ids,
+            token_prob_list,
+            force_tokens,
+            token_map,
+            force_reserve_digit
+          );
 
         const word_probs = this.tokenProbToWordProb(
           word_probs_with_force_logic,
@@ -600,22 +626,23 @@ export class PromptCompressorLLMLingua2 {
 
         const threshold = percentile(new_token_probs, 100 * reduce_rate);
 
-        const keep_words: string[] = [];
+        const keep_word_ids: number[][] = [];
+        let first_kept_word: string | undefined;
 
         for (let i = 0; i < words.length; i++) {
-          const word = words[i];
           const word_prob = word_probs[i];
 
           if (
             word_prob > threshold ||
             (threshold === 1.0 && word_prob == threshold)
           ) {
-            keep_words.push(word);
+            first_kept_word ??= words[i];
+            keep_word_ids.push(word_token_ids[i]);
           }
         }
 
         const keep_str = replace_added_token(
-          this.tokenizer.decoder.decode(keep_words),
+          this.decodeTokenIds(keep_word_ids.flat(), first_kept_word),
           token_map
         );
 

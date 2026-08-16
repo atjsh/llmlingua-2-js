@@ -1,0 +1,17 @@
+import { LLMLingua2 } from "@atjsh/llmlingua-2";
+import type { PretrainedConfig } from "@huggingface/transformers";
+import type { Tiktoken } from "js-tiktoken/lite";
+
+const transformerJSConfig: PretrainedConfig["transformers.js_config"] = {
+  device: "cpu",
+  dtype: "fp32",
+};
+
+const options: LLMLingua2.FactoryOptions = {
+  transformerJSConfig,
+  oaiTokenizer: {} as Tiktoken,
+  logger: () => {},
+};
+
+void LLMLingua2.WithBERTMultilingual("model", options);
+void LLMLingua2.WithXLMRoBERTa("model", options);

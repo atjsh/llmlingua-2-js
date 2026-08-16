@@ -12,7 +12,6 @@ import {
   AutoModelForTokenClassification,
   AutoTokenizer,
   PretrainedConfig,
-  TransformersJSConfig,
 } from "@huggingface/transformers";
 import { Tiktoken } from "js-tiktoken";
 
@@ -31,6 +30,7 @@ type PreTrainedTokenizerOptions = Parameters<
 type PretrainedModelOptions = Parameters<
   typeof AutoModelForTokenClassification.from_pretrained
 >[1];
+type TransformersJSConfig = PretrainedConfig["transformers.js_config"];
 
 async function prepareDependencies(
   modelName: string,
@@ -212,7 +212,9 @@ export async function WithXLMRoBERTa(
     tokenizer,
     get_pure_tokens_xlm_roberta_large,
     is_begin_of_new_word_xlm_roberta_large,
-    oaiTokenizer
+    oaiTokenizer,
+    undefined,
+    logger
   );
 
   logger({ promptCompressor });
@@ -289,7 +291,9 @@ export async function WithBERTMultilingual(
     tokenizer,
     get_pure_tokens_bert_base_multilingual_cased,
     is_begin_of_new_word_bert_base_multilingual_cased,
-    oaiTokenizer
+    oaiTokenizer,
+    undefined,
+    logger
   );
 
   logger({ promptCompressor });

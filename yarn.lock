@@ -17,7 +17,7 @@ __metadata:
     typedoc: "npm:^0.28.4"
     typescript: "npm:^5.8.3"
   peerDependencies:
-    "@huggingface/transformers": "*"
+    "@huggingface/transformers": ^3.5.2 || ^4.0.0
     js-tiktoken: "*"
   languageName: unknown
   linkType: soft

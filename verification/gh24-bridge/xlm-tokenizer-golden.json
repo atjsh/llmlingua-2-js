@@ -1,0 +1,12 @@
+{
+  "expected": {
+    "model": "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
+    "revision": "11c2933c5eed99af04f5277e44e1b9a99771c058",
+    "input": "  Hello, café — 東京! beta omega [END]",
+    "output": " Hello café 東京 omega",
+    "length": 20,
+    "byteLength": 25,
+    "utf8Hex": "2048656c6c6f20636166c3a920e69db1e4baac206f6d656761",
+    "sha256": "3c0b933a751f6b5dc13b86fcfbc0e69443255332f03dbe0a2d0767ee96e5bf24"
+  }
+}
