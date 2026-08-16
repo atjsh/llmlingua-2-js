@@ -51,6 +51,41 @@ Then, install the library:
 npm install @atjsh/llmlingua-2
 ```
 
+## Runtime Backend Selection
+
+Pass an explicit `transformerJSConfig` to the factory. These portable
+configurations favor predictable output across supported runtimes:
+
+```ts
+const nodeTransformerJSConfig = {
+  device: "cpu",
+  dtype: "fp32",
+} as const;
+
+const browserTransformerJSConfig = {
+  device: "wasm",
+  dtype: "fp32",
+} as const;
+```
+
+Hardware acceleration is opt-in and should be tested on each target platform:
+
+| Runtime | `device` | `dtype` |
+|---------|----------|---------|
+| Windows Node.js with DirectML | `"dml"` | `"fp32"` |
+| Linux Node.js with NVIDIA CUDA | `"cuda"` | `"fp32"` |
+| Compatible browsers or macOS Node.js | `"webgpu"` | `"fp32"` |
+
+The library passes the configuration to Transformers.js without detecting a
+backend or retrying with a fallback. For an XLM-RoBERTa model stored with one
+external data file, also pass:
+
+```ts
+modelSpecificOptions: {
+  use_external_data_format: { "model.onnx": 1 },
+}
+```
+
 ## Model Selection
 
 You can choose between models based on your needs.

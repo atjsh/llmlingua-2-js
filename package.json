@@ -1,6 +1,6 @@
 {
   "name": "@atjsh/llmlingua-2",
-  "version": "2.0.5",
+  "version": "3.0.0",
   "packageManager": "yarn@4.9.1",
   "description": "JavaScript/TypeScript Implementation of LLMLingua-2",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "es-toolkit": "^1.38.0"
   },
   "devDependencies": {
-    "@huggingface/transformers": "^3.5.2",
+    "@huggingface/transformers": "^4.2.0",
     "@types/node": "^22.15.18",
     "js-tiktoken": "^1.0.20",
     "rimraf": "^6.0.1",
@@ -35,7 +35,7 @@
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@huggingface/transformers": "^3.5.2 || ^4.0.0",
+    "@huggingface/transformers": "^4.2.0",
     "js-tiktoken": "*"
   },
   "keywords": [

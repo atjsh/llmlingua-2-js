@@ -19,8 +19,47 @@ import {
   IsBeginOfNewWordFunction,
   Logger,
   percentile,
-  replace_added_token,
 } from "./utils.js";
+
+type TokenSpan = readonly [start: number, end: number];
+interface ContextChunk {
+  text: string;
+  separatorBefore: string;
+}
+interface ForcedLiteralSpan {
+  start: number;
+  end: number;
+  literal: string;
+}
+interface ForcedTokenSequence {
+  key: string;
+  ids: number[];
+  literal: string;
+}
+interface ForcedTokenOccurrence {
+  key: string;
+  literal: string;
+  start: number;
+  end: number;
+}
+interface ForcedWordOccurrence extends ForcedTokenOccurrence {
+  sourceIndex: number;
+}
+
+function collectTensors(
+  value: unknown,
+  tensors: Set<Tensor>,
+  seen = new Set<object>()
+): void {
+  if (value instanceof Tensor) {
+    tensors.add(value);
+  } else if (value !== null && typeof value === "object" && !seen.has(value)) {
+    seen.add(value);
+    for (const child of Object.values(value)) {
+      collectTensors(child, tensors, seen);
+    }
+  }
+}
 
 /**
  * Options for compressing prompts.
@@ -112,6 +151,11 @@ export interface CompressPromptOptionsSnakeCase {
    *
    * @defaultValue `"mean"`
    */
+  token_to_word?: "mean" | "first";
+
+  /**
+   * @deprecated Use `token_to_word` instead.
+   */
   token_to_Word?: "mean" | "first";
 
   /**
@@ -160,11 +204,10 @@ interface CompressSingleContextOptions {
 /**
  * The TypeScript implementation on original `PromptCompressor`, which is a class for compressing prompts using a language model.
  *
- * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e4e172afb42d8ae3c0b6cb271a3f5d6a812846a0/llmlingua/prompt_compressor.py)
+ * @see [Original Implementation](https://github.com/microsoft/LLMLingua/blob/e0e9d99beb94098bbd924aa53c2c112eac41c758/llmlingua/prompt_compressor.py)
  * @category Core
  */
 export class PromptCompressorLLMLingua2 {
-  private addedTokens: string[] = [];
   private specialTokenIds: Set<number>;
 
   constructor(
@@ -221,12 +264,8 @@ export class PromptCompressorLLMLingua2 {
     /**
      * Logger function to log messages.
      */
-    private readonly logger: Logger = console.log
+    private readonly logger: Logger = () => {}
   ) {
-    for (let i = 0; i < this.llmlingua2Config.max_force_token; i++) {
-      this.addedTokens.push(`[NEW${i}]`);
-    }
-
     this.specialTokenIds = new Set(this.tokenizer.all_special_ids);
   }
 
@@ -269,7 +308,7 @@ export class PromptCompressorLLMLingua2 {
     return this.compress(context, {
       rate: options.rate,
       targetToken: options.target_token,
-      tokenToWord: options.token_to_Word,
+      tokenToWord: options.token_to_word ?? options.token_to_Word,
       forceTokens: options.force_tokens,
       forceReserveDigit: options.force_reserve_digit,
       dropConsecutive: options.drop_consecutive,
@@ -278,7 +317,7 @@ export class PromptCompressorLLMLingua2 {
   }
 
   private async compressSingleContext(options: CompressSingleContextOptions) {
-    let { context } = options;
+    const { context } = options;
     const {
       rate,
       target_token,
@@ -289,39 +328,20 @@ export class PromptCompressorLLMLingua2 {
       chunk_end_tokens,
     } = options;
 
-    let token_map: Record<string, string> = {};
-
-    for (let i = 0; i < force_tokens.length; i++) {
-      const token = force_tokens[i];
-      const tokenized = this.tokenizer.tokenize(token);
-      if (tokenized.length !== 1) {
-        token_map[token] = this.addedTokens[i];
-      }
+    if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
+      throw new RangeError("rate must be between 0 and 1");
+    }
+    if (force_tokens.length > this.llmlingua2Config.max_force_token) {
+      throw new RangeError(
+        `forceTokens cannot contain more than ${this.llmlingua2Config.max_force_token} entries`
+      );
     }
 
-    const chunkEndTokenSet = new Set(chunk_end_tokens);
-    chunk_end_tokens.forEach((token) => {
-      if (token_map[token]) {
-        chunkEndTokenSet.add(token_map[token]);
-      }
-    });
-
-    const n_original_token = this.getTokenLength(context);
+    const n_original_token = this.oaiTokenizer.encode(context).length;
 
     this.logger(
       "original token length: appx. ",
       n_original_token.toLocaleString()
-    );
-
-    for (const [original, newToken] of Object.entries(token_map)) {
-      context = context.replace(new RegExp(original, "g"), newToken);
-    }
-
-    const chunkedContexts = this.chunkContext(context, chunkEndTokenSet);
-
-    this.logger(
-      "chunking finished. chunk count: ",
-      chunkedContexts.length.toLocaleString()
     );
 
     let final_reduce_rate = 1.0 - rate;
@@ -334,13 +354,58 @@ export class PromptCompressorLLMLingua2 {
       final_reduce_rate = 1.0 - rate_to_keep_for_token_level;
     }
 
+    if (final_reduce_rate <= 0) {
+      this.logger("compression finished");
+      return context;
+    }
+
+    const chunkEndTokenSet = new Set(chunk_end_tokens);
+    const forceTokenSequenceMap = new Map<string, ForcedTokenSequence>();
+    for (const literal of force_tokens) {
+      const ids = this.tokenizer.encode(literal, {
+        add_special_tokens: false,
+      });
+      if (
+        ids.length === 0 ||
+        ids.some((id) => this.specialTokenIds.has(id))
+      ) {
+        throw new RangeError(
+          "Each forceToken must encode to one or more non-special model tokens"
+        );
+      }
+      const key = ids.join(",");
+      if (!forceTokenSequenceMap.has(key)) {
+        forceTokenSequenceMap.set(key, { key, ids, literal });
+      }
+    }
+    const forceTokenSequences = [...forceTokenSequenceMap.values()];
+    const maxContentLength = this.llmlingua2Config.max_seq_length - 2;
+
+    if (
+      forceTokenSequences.some(({ ids }) => ids.length > maxContentLength)
+    ) {
+      throw new RangeError(
+        `A forced token sequence cannot exceed ${maxContentLength} model tokens`
+      );
+    }
+
+    const chunkedContexts = this.chunkContext(
+      context,
+      chunkEndTokenSet,
+      forceTokenSequences
+    );
+
+    this.logger(
+      "chunking finished. chunk count: ",
+      chunkedContexts.length.toLocaleString()
+    );
+
     const compressed_context_strs = await this.compressContexts(
       chunkedContexts,
       {
         reduce_rate: Math.max(0, final_reduce_rate),
         token_to_word,
-        force_tokens,
-        token_map,
+        force_token_sequences: forceTokenSequences,
         force_reserve_digit,
         drop_consecutive,
       }
@@ -348,149 +413,365 @@ export class PromptCompressorLLMLingua2 {
 
     this.logger("compression finished");
 
-    const final_compressed_context = compressed_context_strs.join("\n");
-    return final_compressed_context;
+    let finalCompressedContext = "";
+    for (let i = 0; i < compressed_context_strs.length; i++) {
+      const compressedChunk = compressed_context_strs[i];
+      if (compressedChunk.length === 0) continue;
+      if (finalCompressedContext.length > 0) {
+        finalCompressedContext += chunkedContexts[i].separatorBefore;
+      }
+      finalCompressedContext += compressedChunk;
+    }
+    return finalCompressedContext;
   }
 
   private chunkContext(
     originText: string,
-    chunkEndTokens: Set<string>
-  ): string[] {
+    chunkEndTokens: Set<string>,
+    forceTokenSequences: ForcedTokenSequence[]
+  ): ContextChunk[] {
     const maxLenTokens = this.llmlingua2Config.max_seq_length - 2;
-    const origin_list: string[] = [];
+    const chunkTokenSpans: TokenSpan[] = [];
     const origin_tokens = this.tokenizer.tokenize(originText);
     const origin_token_ids = this.tokenizer.encode(originText, {
       add_special_tokens: false,
     });
     const n = origin_tokens.length;
+
+    if (origin_token_ids.length !== n) {
+      throw new Error("Tokenizer tokens and IDs are not aligned");
+    }
+
+    const forcedOccurrences = this.findForcedTokenOccurrences(
+      origin_token_ids,
+      forceTokenSequences
+    );
+    const isWordBoundary = (boundary: number) =>
+      boundary === n || this.isBeginOfNewWord(origin_tokens[boundary]);
+    const isSafeBoundary = (boundary: number) =>
+      isWordBoundary(boundary) &&
+      !forcedOccurrences.some(
+        ({ start, end }) => start < boundary && boundary < end
+      );
     let st = 0;
 
     while (st < n) {
-      if (st + maxLenTokens > n - 1) {
-        const chunk = this.decodeTokenIds(
-          origin_token_ids.slice(st, n - 1),
-          origin_tokens[st]
-        );
-        origin_list.push(chunk);
-        break;
-      } else {
-        let ed = st + maxLenTokens;
+      let end = Math.min(st + maxLenTokens, n);
 
-        for (let j = 0; j < ed - st; j++) {
-          if (chunkEndTokens.has(origin_tokens[ed - j])) {
-            ed = ed - j;
+      if (end < n) {
+        let chunkEnd: number | undefined;
+
+        for (let i = end - 1; i > st; i--) {
+          if (chunkEndTokens.has(origin_tokens[i]) && isSafeBoundary(i + 1)) {
+            chunkEnd = i + 1;
             break;
           }
         }
+        end = chunkEnd ?? end;
 
-        const chunk = this.decodeTokenIds(
-          origin_token_ids.slice(st, ed + 1),
-          origin_tokens[st]
-        );
+        while (end > st && !isSafeBoundary(end)) {
+          end--;
+        }
+        if (end === st) {
+          const hasWordBoundary = Array.from(
+            { length: Math.min(st + maxLenTokens, n) - st },
+            (_, offset) => st + offset + 1
+          ).some(isWordBoundary);
+          throw new RangeError(
+            hasWordBoundary
+              ? `Overlapping forced token sequences cannot fit within ${maxLenTokens} model tokens`
+              : `A single model word cannot exceed ${maxLenTokens} tokens`
+          );
+        }
+      }
 
-        origin_list.push(chunk);
-        st = ed + 1;
+      chunkTokenSpans.push([st, end]);
+      st = end;
+    }
+
+    return chunkTokenSpans.map(([start, end], index) => ({
+      text: this.decodeTokenIds(origin_token_ids.slice(start, end)),
+      separatorBefore:
+        index === 0
+          ? ""
+          : this.decodeBoundarySeparator(
+              origin_token_ids.slice(...chunkTokenSpans[index - 1]),
+              origin_token_ids.slice(start, end)
+            ),
+    }));
+  }
+
+  private findForcedTokenOccurrences(
+    tokenIds: number[],
+    sequences: ForcedTokenSequence[]
+  ): ForcedTokenOccurrence[] {
+    const occurrences: ForcedTokenOccurrence[] = [];
+
+    for (const { key, ids, literal } of sequences) {
+      for (let start = 0; start <= tokenIds.length - ids.length; start++) {
+        if (
+          ids.every(
+            (tokenId, offset) => tokenIds[start + offset] === tokenId
+          )
+        ) {
+          occurrences.push({ key, literal, start, end: start + ids.length });
+        }
       }
     }
 
-    return origin_list;
+    return occurrences.sort(
+      (left, right) =>
+        left.start - right.start ||
+        left.end - right.end ||
+        left.key.localeCompare(right.key)
+    );
   }
 
-  private getTokenLength(text: string): number {
-    return this.tokenizer.tokenize(text).length;
+  private forcedTokenMask(
+    tokenCount: number,
+    occurrences: ForcedTokenOccurrence[]
+  ): boolean[] {
+    const forced = Array<boolean>(tokenCount).fill(false);
+
+    for (const { start, end } of occurrences) {
+      for (let i = start; i < end; i++) {
+        forced[i] = true;
+      }
+    }
+
+    return forced;
   }
 
-  private decodeTokenIds(tokenIds: number[], firstToken?: string): string {
+  private decodeTokenIds(tokenIds: number[]): string {
     if (tokenIds.length === 0) return "";
 
-    const decoded = this.tokenizer.decode(tokenIds, {
+    return this.tokenizer.decode(tokenIds, {
       clean_up_tokenization_spaces: false,
     });
+  }
 
-    return firstToken?.startsWith("▁") && !decoded.startsWith(" ")
-      ? ` ${decoded}`
-      : decoded;
+  private decodeBoundarySeparator(
+    leftTokenIds: number[],
+    rightTokenIds: number[]
+  ): string {
+    const left = this.decodeTokenIds(leftTokenIds);
+    const right = this.decodeTokenIds(rightTokenIds);
+    const combined = this.decodeTokenIds([...leftTokenIds, ...rightTokenIds]);
+
+    if (combined.startsWith(left) && combined.endsWith(right)) {
+      return combined.slice(left.length, combined.length - right.length);
+    }
+    if (combined.startsWith(left)) {
+      const increment = combined.slice(left.length);
+      if (increment.endsWith(right)) {
+        return increment.slice(0, increment.length - right.length);
+      }
+    }
+    return "";
+  }
+
+  private literalMatchesTokenPosition(
+    container: ForcedLiteralSpan,
+    occurrence: ForcedTokenOccurrence,
+    tokenIds: number[]
+  ): boolean {
+    if (
+      occurrence.start < container.start ||
+      occurrence.end > container.end
+    ) {
+      return false;
+    }
+
+    const expectedPrefix = tokenIds.slice(container.start, occurrence.start);
+    const expectedThrough = tokenIds.slice(container.start, occurrence.end);
+    const matches = (actual: number[], expected: number[]) =>
+      actual.length === expected.length &&
+      actual.every((id, index) => id === expected[index]);
+
+    for (
+      let start = 0;
+      start + occurrence.literal.length <= container.literal.length;
+      start++
+    ) {
+      if (
+        container.literal.slice(start, start + occurrence.literal.length) !==
+        occurrence.literal
+      ) {
+        continue;
+      }
+      const prefix = this.tokenizer.encode(container.literal.slice(0, start), {
+        add_special_tokens: false,
+      });
+      if (!matches(prefix, expectedPrefix)) continue;
+
+      const through = this.tokenizer.encode(
+        container.literal.slice(0, start + occurrence.literal.length),
+        { add_special_tokens: false }
+      );
+      if (matches(through, expectedThrough)) return true;
+    }
+
+    return false;
+  }
+
+  private renderKeptTokens(
+    tokenIds: number[],
+    keptTokenMask: boolean[],
+    forcedOccurrences: ForcedTokenOccurrence[],
+    suppressedOccurrences: Set<number>
+  ): string {
+    const candidates = forcedOccurrences
+      .map((occurrence, index) => ({ occurrence, index }))
+      .filter(
+        ({ occurrence, index }) =>
+          !suppressedOccurrences.has(index) &&
+          keptTokenMask
+            .slice(occurrence.start, occurrence.end)
+            .every(Boolean)
+      )
+      .sort(
+        (left, right) =>
+          left.occurrence.start - right.occurrence.start ||
+          right.occurrence.end - left.occurrence.end ||
+          left.occurrence.key.localeCompare(right.occurrence.key)
+      );
+    const literalOccurrences: ForcedLiteralSpan[] = [];
+
+    for (const { occurrence } of candidates) {
+      const previous = literalOccurrences.at(-1);
+      if (!previous || occurrence.start >= previous.end) {
+        literalOccurrences.push({ ...occurrence });
+        continue;
+      }
+
+      if (occurrence.end <= previous.end) {
+        if (
+          !this.literalMatchesTokenPosition(previous, occurrence, tokenIds)
+        ) {
+          throw new RangeError(
+            "Overlapping forceTokens contain inconsistent literal text"
+          );
+        }
+        continue;
+      }
+
+      const sharedTokenIds = tokenIds.slice(occurrence.start, previous.end);
+      let sharedLiteralLength = -1;
+      for (
+        let length = Math.min(
+          previous.literal.length,
+          occurrence.literal.length
+        );
+        length > 0;
+        length--
+      ) {
+        const sharedLiteral = occurrence.literal.slice(0, length);
+        if (!previous.literal.endsWith(sharedLiteral)) continue;
+        const encoded = this.tokenizer.encode(sharedLiteral, {
+          add_special_tokens: false,
+        });
+        if (
+          encoded.length === sharedTokenIds.length &&
+          encoded.every((id, index) => id === sharedTokenIds[index])
+        ) {
+          sharedLiteralLength = length;
+          break;
+        }
+      }
+      if (sharedLiteralLength < 0) {
+        throw new RangeError(
+          "Overlapping forceTokens contain inconsistent literal text"
+        );
+      }
+      previous.literal += occurrence.literal.slice(sharedLiteralLength);
+      previous.end = occurrence.end;
+    }
+
+    const prefixIds: number[] = [];
+    let rendered = "";
+
+    const appendDecoded = (ids: number[]) => {
+      if (ids.length === 0) return "";
+      const before = this.decodeTokenIds(prefixIds);
+      const combined = this.decodeTokenIds([...prefixIds, ...ids]);
+      const increment = combined.startsWith(before)
+        ? combined.slice(before.length)
+        : this.decodeTokenIds(ids);
+      prefixIds.push(...ids);
+      return increment;
+    };
+    const appendNormalRange = (start: number, end: number) => {
+      const ids: number[] = [];
+      for (let i = start; i < end; i++) {
+        if (keptTokenMask[i]) ids.push(tokenIds[i]);
+      }
+      rendered += appendDecoded(ids);
+    };
+
+    let position = 0;
+    for (const occurrence of literalOccurrences) {
+      appendNormalRange(position, occurrence.start);
+      const ids = tokenIds.slice(occurrence.start, occurrence.end);
+      const increment = appendDecoded(ids);
+      const decodedOccurrence = this.decodeTokenIds(ids);
+      const separator =
+        decodedOccurrence.length > 0 && increment.endsWith(decodedOccurrence)
+          ? increment.slice(0, -decodedOccurrence.length)
+          : increment.slice(0, increment.length - increment.trimStart().length);
+      rendered += separator + occurrence.literal;
+      position = occurrence.end;
+    }
+    appendNormalRange(position, tokenIds.length);
+
+    return rendered;
   }
 
   private mergeTokenToWord(
     tokens: string[],
     token_ids: number[],
     token_probs: number[],
-    force_tokens_original: string[],
-    token_map: Record<string, string>,
+    forced_token_mask: boolean[],
     force_reserve_digit: boolean
   ): {
     words: string[];
-    word_token_ids: number[][];
+    word_token_spans: TokenSpan[];
     word_probs_with_force_logic: number[][];
-    valid_token_probs_no_force: number[][];
   } {
     const words: string[] = [];
-    const word_token_ids: number[][] = [];
+    const word_token_spans: TokenSpan[] = [];
     const word_probs_with_force_logic: number[][] = [];
-    const valid_token_probs_no_force: number[][] = [];
 
     for (let i = 0; i < tokens.length; i++) {
-      let token = tokens[i];
+      const token = tokens[i];
       const token_id = token_ids[i];
-      let prob = token_probs[i];
+      const forced = forced_token_mask[i];
+      const prob =
+        forced || (force_reserve_digit && /\d/.test(token))
+          ? 1.0
+          : token_probs[i];
 
       if (this.specialTokenIds.has(token_id)) {
-      } else if (
-        this.isBeginOfNewWord(token, force_tokens_original, token_map)
-      ) {
-        const pure_token = this.getPureToken(token);
-        const prob_no_force = prob;
+        continue;
+      }
 
-        if (
-          force_tokens_original.includes(pure_token) ||
-          Object.values(token_map).includes(pure_token)
-        ) {
-          prob = 1.0;
-        }
-        token = replace_added_token(token, token_map);
+      if (words.length === 0 || this.isBeginOfNewWord(token)) {
         words.push(token);
-        word_token_ids.push([token_id]);
-        word_probs_with_force_logic.push([
-          force_reserve_digit && token.match(/^\d/) ? 1.0 : prob,
-        ]);
-        valid_token_probs_no_force.push([prob_no_force]);
+        word_token_spans.push([i, i + 1]);
+        word_probs_with_force_logic.push([prob]);
       } else {
         const pure_token = this.getPureToken(token);
+        const last = words.length - 1;
 
-        words[words.length - 1] += pure_token;
-
-        if (word_probs_with_force_logic.length === 0) {
-          word_probs_with_force_logic.push([
-            force_reserve_digit && token.match(/^\d/) ? 1.0 : prob,
-          ]);
-        } else {
-          word_probs_with_force_logic[
-            word_probs_with_force_logic.length - 1
-          ].push(force_reserve_digit && token.match(/^\d/) ? 1.0 : prob);
-        }
-
-        if (valid_token_probs_no_force.length === 0) {
-          valid_token_probs_no_force.push([prob]);
-        } else {
-          valid_token_probs_no_force[
-            valid_token_probs_no_force.length - 1
-          ].push(prob);
-        }
-
-        if (word_token_ids.length === 0) {
-          word_token_ids.push([token_id]);
-        } else {
-          word_token_ids[word_token_ids.length - 1].push(token_id);
-        }
+        words[last] += pure_token;
+        word_token_spans[last] = [word_token_spans[last][0], i + 1];
+        word_probs_with_force_logic[last].push(prob);
       }
     }
 
     return {
       words,
-      word_token_ids,
+      word_token_spans,
       word_probs_with_force_logic,
-      valid_token_probs_no_force,
     };
   }
 
@@ -509,12 +790,11 @@ export class PromptCompressorLLMLingua2 {
   }
 
   private async compressContexts(
-    contexts: string[],
+    contexts: ContextChunk[],
     options: {
       reduce_rate: number;
       token_to_word: "mean" | "first";
-      force_tokens: string[];
-      token_map: Record<string, string>;
+      force_token_sequences: ForcedTokenSequence[];
       force_reserve_digit: boolean;
       drop_consecutive: boolean;
     }
@@ -522,14 +802,13 @@ export class PromptCompressorLLMLingua2 {
     const {
       reduce_rate,
       token_to_word,
-      force_tokens,
-      token_map,
+      force_token_sequences,
       force_reserve_digit,
       drop_consecutive,
     } = options;
 
     if (reduce_rate <= 0) {
-      return contexts;
+      return contexts.map(({ text }) => text);
     } else if (contexts.length === 0) {
       return [];
     }
@@ -541,112 +820,300 @@ export class PromptCompressorLLMLingua2 {
       this.llmlingua2Config.max_batch_size
     );
 
-    for (const context of chunked_contexts) {
-      const { input_ids, attention_mask } = await this.tokenizer(context, {
+    for (const contextChunks of chunked_contexts) {
+      const contextTexts = contextChunks.map(({ text }) => text);
+      const inputs = await this.tokenizer(contextTexts, {
         padding: true,
         truncation: true,
+        max_length: this.llmlingua2Config.max_seq_length,
       });
+      const ownedTensors = new Set<Tensor>();
+      collectTensors(inputs, ownedTensors);
 
-      this.logger("input tokenization finished");
+      try {
+        this.logger("input tokenization finished");
 
-      const [, input_ids_seq_len] = input_ids.dims;
+        const { input_ids, attention_mask } = inputs;
+        const outputs = (await this.model(inputs)) as {
+          logits: Tensor;
+          [key: string]: unknown;
+        };
+        collectTensors(outputs, ownedTensors);
 
-      const outputs = (await this.model({
-        input_ids,
-        attention_mask,
-      })) as { logits: Tensor };
+        this.logger("model inference finished");
 
-      this.logger("model inference finished");
+        const [batch_size, seq_len, num_classes] = outputs.logits.dims;
+        const [input_batch_size, input_ids_seq_len] = input_ids.dims;
+        const [mask_batch_size, mask_seq_len] = attention_mask.dims;
 
-      const [batch_size, seq_len, num_classes] = outputs.logits.dims;
-
-      this.logger("logits shape:", outputs.logits.dims);
-
-      const logits = outputs.logits.data as Float32Array;
-
-      for (let j = 0; j < batch_size; j++) {
-        const chunk_probs_class1 = Array.from({ length: seq_len }, (_, i) => {
-          const offset = (j * seq_len + i) * num_classes;
-          return softmax(logits.subarray(offset, offset + num_classes))[1];
-        });
-        const chunk_mask = attention_mask[j] as Tensor;
-
-        const chunk_mask_number_array = Array.from(chunk_mask.data, (v) =>
-          Number(v)
-        );
-
-        const active_probs = chunk_probs_class1.filter(
-          (_, i) => chunk_mask_number_array[i] > 0
-        );
-
-        const input_ids_offset = j * input_ids_seq_len;
-        const active_ids_with_zero = Array.from(
-          { length: input_ids_seq_len },
-          (_, i) => Number(input_ids.data[input_ids_offset + i])
-        ).filter((_, i) => chunk_mask_number_array[i] > 0);
-        const active_tokens = this.tokenizer
-          .tokenize(context[j], { add_special_tokens: true })
-          .slice(0, active_probs.length);
-        const active_ids = active_ids_with_zero.filter((v) => v !== 0);
-        const token_list = active_tokens.filter(
-          (_, i) => active_ids_with_zero[i] !== 0
-        );
-
-        if (active_ids.length === 0) {
-          compressed_chunk_strings_flat.push("");
-          continue;
+        if (
+          batch_size !== input_batch_size ||
+          batch_size !== mask_batch_size ||
+          seq_len !== input_ids_seq_len ||
+          seq_len !== mask_seq_len ||
+          num_classes < 2
+        ) {
+          throw new Error("Model logits and tokenizer inputs are not aligned");
         }
 
-        const token_prob_list = Array.from(active_probs);
+        this.logger("logits shape:", outputs.logits.dims);
 
-        const { words, word_token_ids, word_probs_with_force_logic } =
-          this.mergeTokenToWord(
-            token_list,
+        const floatLogits = outputs.logits.to("float32");
+        if (floatLogits !== outputs.logits) {
+          ownedTensors.add(floatLogits);
+        }
+        const logits = floatLogits.data as Float32Array;
+
+        for (let batchIndex = 0; batchIndex < batch_size; batchIndex++) {
+          const active_ids: number[] = [];
+          const active_probs: number[] = [];
+          const sequenceOffset = batchIndex * seq_len;
+
+          for (let tokenIndex = 0; tokenIndex < seq_len; tokenIndex++) {
+            if (Number(attention_mask.data[sequenceOffset + tokenIndex]) <= 0) {
+              continue;
+            }
+
+            active_ids.push(
+              Number(input_ids.data[sequenceOffset + tokenIndex])
+            );
+            const logitsOffset =
+              (sequenceOffset + tokenIndex) * num_classes;
+            active_probs.push(
+              softmax(
+                logits.subarray(logitsOffset, logitsOffset + num_classes)
+              )[1]
+            );
+          }
+
+          const active_tokens = this.tokenizer.tokenize(
+            contextTexts[batchIndex],
+            { add_special_tokens: true }
+          );
+
+          if (active_tokens.length !== active_ids.length) {
+            throw new Error("Tokenizer tokens and IDs are not aligned");
+          }
+
+          const forcedTokenOccurrences = this.findForcedTokenOccurrences(
             active_ids,
-            token_prob_list,
-            force_tokens,
-            token_map,
+            force_token_sequences
+          );
+          const forcedTokenMask = this.forcedTokenMask(
+            active_ids.length,
+            forcedTokenOccurrences
+          );
+
+          const {
+            words,
+            word_token_spans,
+            word_probs_with_force_logic,
+          } = this.mergeTokenToWord(
+            active_tokens,
+            active_ids,
+            active_probs,
+            forcedTokenMask,
             force_reserve_digit
           );
 
-        const word_probs = this.tokenProbToWordProb(
-          word_probs_with_force_logic,
-          token_to_word
-        );
+          const word_probs = this.tokenProbToWordProb(
+            word_probs_with_force_logic,
+            token_to_word
+          );
 
-        const new_token_probs: number[] = [];
-        for (let i = 0; i < words.length; i++) {
-          const word = words[i];
-          const word_prob = word_probs[i];
+          let forcedWordOccurrences: ForcedWordOccurrence[] = [];
+          const droppedOccurrences = new Set<number>();
+          const postSelectionDrops = new Set<number>();
 
-          const new_token = this.oaiTokenizer.encode(word);
+          if (drop_consecutive) {
+            forcedWordOccurrences = forcedTokenOccurrences.flatMap(
+              (
+                { key, literal, start: tokenStart, end: tokenEnd },
+                sourceIndex
+              ) => {
+                const start = word_token_spans.findIndex(
+                  ([wordStart, wordEnd]) =>
+                    wordStart < tokenEnd && tokenStart < wordEnd
+                );
+                if (start < 0) return [];
 
-          new_token_probs.push(...Array(new_token.length).fill(word_prob));
-        }
+                let end = start + 1;
+                while (
+                  end < word_token_spans.length &&
+                  word_token_spans[end][0] < tokenEnd
+                ) {
+                  end++;
+                }
+                return [{ key, literal, start, end, sourceIndex }];
+              }
+            );
+            const dropThreshold = percentile(
+              word_probs,
+              Math.min(100, Math.floor(100 * reduce_rate))
+            );
+            const forcedWords = Array<boolean>(words.length).fill(false);
+            for (const { start, end } of forcedWordOccurrences) {
+              forcedWords.fill(true, start, end);
+            }
 
-        const threshold = percentile(new_token_probs, 100 * reduce_rate);
+            let previous: ForcedTokenOccurrence | undefined;
 
-        const keep_word_ids: number[][] = [];
-        let first_kept_word: string | undefined;
+            for (let i = 0; i < forcedWordOccurrences.length; i++) {
+              const occurrence = forcedWordOccurrences[i];
+              if (previous) {
+                let hasSelectedWordBetween = false;
+                for (
+                  let word = previous.end;
+                  word < occurrence.start;
+                  word++
+                ) {
+                  if (!forcedWords[word] && word_probs[word] > dropThreshold) {
+                    hasSelectedWordBetween = true;
+                    break;
+                  }
+                }
+                if (
+                  !hasSelectedWordBetween &&
+                  occurrence.key === previous.key
+                ) {
+                  droppedOccurrences.add(occurrence.sourceIndex);
+                }
+              }
+              previous = occurrence;
+            }
 
-        for (let i = 0; i < words.length; i++) {
-          const word_prob = word_probs[i];
-
-          if (
-            word_prob > threshold ||
-            (threshold === 1.0 && word_prob == threshold)
-          ) {
-            first_kept_word ??= words[i];
-            keep_word_ids.push(word_token_ids[i]);
+            const keptForcedWords = Array<boolean>(words.length).fill(false);
+            const droppedForcedWords = Array<boolean>(words.length).fill(false);
+            for (let i = 0; i < forcedWordOccurrences.length; i++) {
+              const { sourceIndex, start, end } = forcedWordOccurrences[i];
+              (droppedOccurrences.has(sourceIndex)
+                ? droppedForcedWords
+                : keptForcedWords
+              ).fill(true, start, end);
+            }
+            for (let i = 0; i < words.length; i++) {
+              if (droppedForcedWords[i] && !keptForcedWords[i]) {
+                word_probs[i] = 0.0;
+              }
+            }
           }
+
+          const new_token_probs: number[] = [];
+          for (let i = 0; i < words.length; i++) {
+            const tokenCount = this.oaiTokenizer.encode(words[i]).length;
+            new_token_probs.push(...Array(tokenCount).fill(word_probs[i]));
+          }
+
+          const threshold = percentile(
+            new_token_probs,
+            Math.min(100, Math.floor(100 * reduce_rate + 1))
+          );
+
+          const keepWords = word_probs.map(
+            (wordProb) =>
+              wordProb > threshold ||
+              (threshold === 1.0 && wordProb === threshold)
+          );
+
+          if (drop_consecutive) {
+            const occurrenceCoverage = Array.from(
+              { length: words.length },
+              () => [] as number[]
+            );
+            for (let i = 0; i < forcedWordOccurrences.length; i++) {
+              const { sourceIndex, start, end } = forcedWordOccurrences[i];
+              if (droppedOccurrences.has(sourceIndex)) continue;
+              for (let word = start; word < end; word++) {
+                occurrenceCoverage[word].push(sourceIndex);
+              }
+            }
+            let previous: ForcedTokenOccurrence | undefined;
+
+            for (let i = 0; i < forcedWordOccurrences.length; i++) {
+              const occurrence = forcedWordOccurrences[i];
+              if (droppedOccurrences.has(occurrence.sourceIndex)) continue;
+              if (
+                !keepWords
+                  .slice(occurrence.start, occurrence.end)
+                  .some(Boolean)
+              ) {
+                continue;
+              }
+
+              let hasKeptWordBetween = false;
+              if (previous) {
+                for (
+                  let word = previous.end;
+                  word < occurrence.start;
+                  word++
+                ) {
+                  if (
+                    keepWords[word] &&
+                    (occurrenceCoverage[word].length === 0 ||
+                      occurrenceCoverage[word].some(
+                        (index) => !postSelectionDrops.has(index)
+                      ))
+                  ) {
+                    hasKeptWordBetween = true;
+                    break;
+                  }
+                }
+              }
+              if (
+                previous &&
+                !hasKeptWordBetween &&
+                occurrence.key === previous.key
+              ) {
+                postSelectionDrops.add(occurrence.sourceIndex);
+                continue;
+              }
+              previous = occurrence;
+            }
+
+            const retainedForcedWords = Array<boolean>(words.length).fill(
+              false
+            );
+            const droppedForcedWords = Array<boolean>(words.length).fill(
+              false
+            );
+            for (let i = 0; i < forcedWordOccurrences.length; i++) {
+              const { sourceIndex, start, end } = forcedWordOccurrences[i];
+              if (droppedOccurrences.has(sourceIndex)) continue;
+              (postSelectionDrops.has(sourceIndex)
+                ? droppedForcedWords
+                : retainedForcedWords
+              ).fill(true, start, end);
+            }
+            for (let i = 0; i < words.length; i++) {
+              if (droppedForcedWords[i] && !retainedForcedWords[i]) {
+                keepWords[i] = false;
+              }
+            }
+          }
+
+          const keptTokenMask = Array<boolean>(active_ids.length).fill(false);
+          for (let i = 0; i < words.length; i++) {
+            if (!keepWords[i]) continue;
+            keptTokenMask.fill(
+              true,
+              word_token_spans[i][0],
+              word_token_spans[i][1]
+            );
+          }
+
+          compressed_chunk_strings_flat.push(
+            this.renderKeptTokens(
+              active_ids,
+              keptTokenMask,
+              forcedTokenOccurrences,
+              new Set([...droppedOccurrences, ...postSelectionDrops])
+            )
+          );
         }
-
-        const keep_str = replace_added_token(
-          this.decodeTokenIds(keep_word_ids.flat(), first_kept_word),
-          token_map
-        );
-
-        compressed_chunk_strings_flat.push(keep_str);
+      } finally {
+        for (const tensor of ownedTensors) {
+          tensor.dispose();
+        }
       }
     }
 
