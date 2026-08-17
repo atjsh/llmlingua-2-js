@@ -51,9 +51,6 @@ export const CompressorDashboard: React.FC<{
     LLMLingua2CompressorModels.TINYBERT
   );
   const [device, setDevice] = useState(model.defaultDevice);
-  const [modelDataType, setModelDataType] = useState(
-    model.defaultModelDataType
-  );
   const [keepNewLine, setKeepNewLine] = useState(true);
   const [keepingTokens, setKeepingTokens] = useState<string[]>([".", ";"]);
   const [keepDigits, setKeepDigits] = useState(true);
@@ -72,8 +69,7 @@ export const CompressorDashboard: React.FC<{
         llmlingua2Config: {
           modelSelection: model.key,
           transformersJSConfig: {
-            device,
-            modelDataType
+            device
           }
         }
       });
@@ -94,7 +90,7 @@ export const CompressorDashboard: React.FC<{
         compressorWorker.current[Comlink.releaseProxy]();
       }
     };
-  }, [model, device, modelDataType]);
+  }, [model, device]);
 
   const handleCompression = async () => {
     if (compressionStatus !== CompressorReadyStatus.READY) {
@@ -181,7 +177,6 @@ export const CompressorDashboard: React.FC<{
                   ];
                 setModel(selectedModel);
                 setDevice(selectedModel.defaultDevice);
-                setModelDataType(selectedModel.defaultModelDataType);
               }}
               className="w-full p-2 border rounded"
             >

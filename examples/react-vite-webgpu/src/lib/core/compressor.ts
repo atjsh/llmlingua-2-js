@@ -6,6 +6,7 @@ import {
   AutoConfig,
   AutoTokenizer,
   BertForTokenClassification,
+  env,
   PreTrainedModel,
 } from "@huggingface/transformers";
 import { Tiktoken } from "js-tiktoken/lite";
@@ -16,6 +17,7 @@ import { MobileBertForTokenClassification } from "@/lib/transformers-js/mobileBe
 const oaiTokenizer = new Tiktoken(o200k_base);
 type TransformersJSConfig =
   LLMLingua2.FactoryOptions["transformerJSConfig"];
+type BrowserBackend = Extract<DeviceType, "webgpu" | "wasm">;
 
 export const LLMLingua2CompressorModelName = {
   TINYBERT: "TINYBERT",
@@ -29,9 +31,10 @@ export type LLMLingua2CompressorModelName =
 export const LLMLingua2CompressorModels = {
   TINYBERT: {
     key: "TINYBERT",
-    modelName: "atjsh/llmlingua-2-js-tinybert-meetingbank",
+    modelName: "atjsh/llmlingua-2-js-tinybert-meetingbank-onnx-v4",
+    revision: "e49e9637ec1e9a88defd52b6422cf2d40e96d539",
     defaultDevice: "webgpu",
-    defaultModelDataType: "fp32",
+    defaultModelDataTypes: { webgpu: "bnb4", wasm: "uint8" },
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
@@ -45,9 +48,10 @@ export const LLMLingua2CompressorModels = {
   },
   MOBILEBERT: {
     key: "MOBILEBERT",
-    modelName: "atjsh/llmlingua-2-js-mobilebert-meetingbank",
+    modelName: "atjsh/llmlingua-2-js-mobilebert-meetingbank-onnx-v4",
+    revision: "3e0b45f7bafc20bb5f83a288ff02decf3facf900",
     defaultDevice: "webgpu",
-    defaultModelDataType: "fp32",
+    defaultModelDataTypes: { webgpu: "bnb4", wasm: "bnb4" },
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
@@ -61,23 +65,23 @@ export const LLMLingua2CompressorModels = {
   },
   BERT: {
     key: "BERT",
-    modelName: "Arcoldd/llmlingua4j-bert-base-onnx",
+    modelName:
+      "atjsh/llmlingua-2-js-bert-base-multilingual-cased-meetingbank-onnx-v4",
+    revision: "db67b6283d60e7190b32a6b8a8a87c87a6c1375a",
     defaultDevice: "webgpu",
-    defaultModelDataType: "fp32",
+    defaultModelDataTypes: { webgpu: "bnb4", wasm: "uint8" },
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
-
-    pretrainedModelOptions: {
-      subfolder: "",
-    },
     factory: LLMLingua2.WithBERTMultilingual,
   },
   ROBERTA: {
     key: "ROBERTA",
-    modelName: "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank",
+    modelName:
+      "atjsh/llmlingua-2-js-xlm-roberta-large-meetingbank-onnx-v4",
+    revision: "844e52fefd284e6479b027b3ccb47c1b9954d640",
     defaultDevice: "webgpu",
-    defaultModelDataType: "int8",
+    defaultModelDataTypes: { webgpu: "fp32", wasm: "fp32" },
     maxBatchSize: 50,
     maxForceTokens: 100,
     maxSequenceLength: 512,
@@ -92,8 +96,9 @@ export const LLMLingua2CompressorModels = {
 export interface LLMLingua2ModelConfig {
   key: LLMLingua2CompressorModelName;
   modelName: string;
-  defaultDevice: DeviceType;
-  defaultModelDataType: DataType;
+  revision: string;
+  defaultDevice: BrowserBackend;
+  defaultModelDataTypes: Record<BrowserBackend, DataType>;
   maxBatchSize: number;
   maxForceTokens: number;
   maxSequenceLength: number;
@@ -111,8 +116,7 @@ export interface LLMLingua2ModelConfig {
 interface LLMLingua2CompressorConfig {
   modelSelection: LLMLingua2CompressorModelName | LLMLingua2ModelConfig;
   transformersJSConfig: {
-    device: DeviceType;
-    modelDataType: DataType;
+    device: BrowserBackend;
   };
 }
 
@@ -155,14 +159,27 @@ async function LLMLingua2CompressorFactory(options: {
       : providedTransformersJSConfig.device;
   const transformersJSConfig: TransformersJSConfig = {
     device,
-    dtype: providedTransformersJSConfig.modelDataType,
+    dtype: model.defaultModelDataTypes[device],
+  };
+  env.remotePathTemplate = `{model}/resolve/${model.revision}/`;
+  const config = await AutoConfig.from_pretrained(model.modelName, {
+    revision: model.revision,
+  });
+  const runtimeConfig = {
+    ...config,
+    "transformers.js_config": transformersJSConfig,
   };
 
   if (model.factory) {
     const { promptCompressor } = await model.factory(model.modelName, {
       transformerJSConfig: transformersJSConfig,
       oaiTokenizer,
-      modelSpecificOptions: model.pretrainedModelOptions,
+      pretrainedConfig: runtimeConfig,
+      pretrainedTokenizerOptions: { revision: model.revision },
+      modelSpecificOptions: {
+        ...model.pretrainedModelOptions,
+        revision: model.revision,
+      },
     });
 
     return promptCompressor;
@@ -173,21 +190,17 @@ async function LLMLingua2CompressorFactory(options: {
     model.tokenUtils?.getPureTokens &&
     model.tokenUtils.isBeginOfNewWord
   ) {
-    const config = await AutoConfig.from_pretrained(model.modelName);
     const tokenizer = await AutoTokenizer.from_pretrained(model.modelName, {
-      config: {
-        ...config,
-        "transformers.js_config": transformersJSConfig,
-      },
+      revision: model.revision,
+      config: runtimeConfig,
     });
 
     const pretrainedModel = await model.pretrainedModel.from_pretrained(
       model.modelName,
       {
-        config: {
-          ...config,
-          "transformers.js_config": transformersJSConfig,
-        },
+        ...model.pretrainedModelOptions,
+        revision: model.revision,
+        config: runtimeConfig,
       }
     );
 
